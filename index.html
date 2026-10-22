@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TickTap - Offset Bet Controller Demo</title>
+<meta name="description" content="Working demo: phone trigger buttons that place offset back and lay bets through the Betfair API, plus a desktop settings view. Simulated data only.">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23c1121f'/%3E%3Cpath d='M10 22c12 8 12 12 0 20M54 22c-12 8-12 12 0 20' fill='none' stroke='%23fff6e4' stroke-width='3' stroke-dasharray='4 4'/%3E%3Cpath d='M32 4v56' stroke='%23ffb703' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#ffffff;--bg1:#f6f8fd;--bg2:#eef2fb;--line:#e4e8f3;
+  --ink:#101426;--ink2:#3a4160;--mute:#6b7191;
+  --orange:#ff7a1a;--amber:#ffb02e;--blue:#3b5bff;--pink:#ff4f8b;--green:#12b76a;--red:#f04438;
+  --grad:linear-gradient(135deg,#ff7a1a,#ffb02e);
+  --f-head:'Plus Jakarta Sans','Noto Sans Devanagari',system-ui,sans-serif;
+  --f-body:'Plus Jakarta Sans','Noto Sans Devanagari',system-ui,sans-serif;
+  --f-label:'Plus Jakarta Sans',system-ui,sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --sh1:0 1px 2px rgba(16,20,38,.06),0 8px 24px -8px rgba(16,20,38,.12);
+  --sh2:0 2px 4px rgba(16,20,38,.05),0 30px 60px -24px rgba(16,20,38,.28);
+}
+.dk{--c:#101426;--m:#6b7191;--ln:#e4e8f3;--bg:#ffffff;--bg2:#f4f6fc;--bg3:#eef2fb;--back:#2563eb;--lay:#d6336c;--ok:#12b76a;--bad:#f04438;--amber:#b45309}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg0);color:var(--ink);font:400 17px/1.6 var(--f-body);overflow-x:hidden;overflow-x:clip;min-height:100vh}
+h1,h2,h3{font-family:var(--f-head);font-weight:800;line-height:1.05;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:10px}
+.wrap{width:min(1180px,100% - 32px);margin-inline:auto}
+.spot{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(420px circle at var(--mx,70%) var(--my,20%),rgba(255,140,40,.12),transparent 65%)}
+.ring{position:fixed;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px solid var(--orange);border-radius:50%;pointer-events:none;z-index:99;opacity:0;transition:width .2s,height .2s,margin .2s,background .2s,opacity .3s}
+.ring.on{opacity:.7}.ring.big{width:58px;height:58px;margin:-29px 0 0 -29px;background:rgba(255,122,26,.1)}
+.progress{position:fixed;left:0;top:0;right:0;height:3px;z-index:80}
+.progress i{display:block;height:100%;width:0;background:var(--grad)}
+
+/* header */
+.top{position:fixed;top:0;left:0;right:0;z-index:70;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px max(16px,calc((100% - 1180px)/2));background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(16,20,38,.07)}
+.brand{display:flex;align-items:center;gap:10px;font:800 22px var(--f-head);letter-spacing:-.04em}
+.brand .b{width:30px;height:30px;display:block}
+.top nav{display:flex;gap:6px;font-weight:600;font-size:14.5px}
+.top nav a{padding:8px 14px;border-radius:99px;color:var(--ink2);transition:.2s}
+.top nav a:hover{background:var(--bg2);color:var(--ink)}
+.pill{font:700 12px var(--f-label);letter-spacing:.02em;color:var(--orange);background:#fff3e8;border:1px solid #ffd9b8;border-radius:99px;padding:6px 12px;white-space:nowrap}
+
+/* generic */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:99px;font-weight:700;font-size:16px;transition:transform .15s,box-shadow .2s,background .2s;will-change:transform}
+.btn.primary{background:var(--grad);color:#fff;box-shadow:0 10px 24px -8px rgba(255,122,26,.7)}
+.btn.primary:hover{box-shadow:0 14px 30px -8px rgba(255,122,26,.85)}
+.btn.ghost{background:#fff;border:1px solid var(--line);box-shadow:var(--sh1)}
+.btn:active{transform:scale(.97)!important}
+.btn.sm{padding:9px 16px;font-size:14px}
+.eyebrow{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;font:700 12.5px var(--f-label);letter-spacing:.04em;text-transform:uppercase;color:var(--blue);background:#eef1ff;border-radius:99px;padding:6px 14px 6px 12px}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.dv{font:600 14px var(--f-body);letter-spacing:0;text-transform:none;color:var(--orange)}
+.sec{position:relative;z-index:1;padding:clamp(70px,10vw,120px) 0}
+.sec.alt{background:var(--bg1)}
+.sec h2{font-size:clamp(34px,5vw,58px);margin:18px 0 16px;max-width:18ch}
+.lede{color:var(--ink2);max-width:58ch;font-size:clamp(17px,1.5vw,19px)}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+.nojs .rv{opacity:1;transform:none}
+.mark{position:relative;white-space:nowrap;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mark svg{position:absolute;left:-2%;bottom:-.14em;width:104%;height:.3em;overflow:visible}
+.mark path{stroke:var(--blue);stroke-width:5;fill:none;stroke-linecap:round;stroke-dasharray:480;stroke-dashoffset:480;animation:draw 1.1s .5s forwards ease-out}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* hero */
+.hero{position:relative;z-index:1;min-height:100svh;padding:130px 0 80px;display:flex;align-items:center;overflow:hidden;
+  background:radial-gradient(720px 520px at 88% 8%,rgba(255,176,46,.34),transparent 62%),radial-gradient(620px 520px at 2% 100%,rgba(59,91,255,.13),transparent 62%),linear-gradient(#fff,#fffaf4)}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(16,20,38,.1) 1.2px,transparent 1.5px) 0 0/28px 28px;-webkit-mask-image:linear-gradient(110deg,#000,transparent 55%);mask-image:linear-gradient(110deg,#000,transparent 55%)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:40px;align-items:center;position:relative}
+.hero h1{font-size:clamp(42px,5.8vw,80px);margin:22px 0 20px}
+.hero h1 .sub{display:block;font:600 clamp(18px,2vw,24px)/1.3 var(--f-body);letter-spacing:-.01em;color:var(--mute);margin-top:16px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;margin:30px 0 38px}
+.facts{display:flex;flex-wrap:wrap;gap:12px}
+.facts div{padding:14px 20px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:var(--sh1)}
+.facts dt{font:800 28px var(--f-head);letter-spacing:-.04em;line-height:1.1}
+.facts dd{font-size:13px;color:var(--mute);line-height:1.35}
+.stage{position:relative;display:grid;place-items:center;perspective:1400px;padding:20px 0}
+.arch{position:relative;width:min(420px,100%);padding:36px 18px 36px;border-radius:44px;display:grid;place-items:center;
+  background:linear-gradient(160deg,#fff4e4,#ffe2c6 45%,#e3eaff);border:1px solid #fff;box-shadow:var(--sh2),inset 0 0 0 1px rgba(255,255,255,.7);overflow:visible}
+.arch::before{content:"";position:absolute;inset:0;border-radius:44px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 3l6 19 19 6-19 6-6 19-6-19-19-6 19-6z' fill='none' stroke='%23ff7a1a' stroke-opacity='.22' stroke-width='1.3'/%3E%3C/svg%3E");pointer-events:none}
+.sticker-ball{position:absolute;left:-30px;bottom:-24px;width:112px;height:112px;z-index:4;filter:drop-shadow(0 18px 18px rgba(16,20,38,.3));animation:floaty 6s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-12px) rotate(8deg)}}
+.chipf{position:absolute;z-index:5;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:var(--sh1);font:700 13px var(--f-body);color:var(--ink);white-space:nowrap;animation:bob 5s ease-in-out infinite}
+.chipf i{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(18,183,106,.18)}
+.chipf b{font:700 13px var(--f-mono);color:var(--orange)}
+.chipf.c1{left:-48px;top:44px}.chipf.c2{right:-52px;top:96px;animation-delay:-1.6s}.chipf.c3{right:-18px;bottom:60px;animation-delay:-3s}
+@keyframes bob{50%{transform:translateY(-9px)}}
+.tilt{transform-style:preserve-3d;transition:transform .15s ease-out;will-change:transform}
+.phone{position:relative;width:min(292px,78vw);height:568px;border-radius:44px;padding:9px;background:linear-gradient(145deg,#ffffff,#d9deea);box-shadow:0 40px 60px -22px rgba(16,20,38,.45),0 0 0 1px rgba(16,20,38,.12),inset 0 0 0 2px #fff}
+.phone::before{content:"";position:absolute;top:17px;left:50%;width:62px;height:18px;margin-left:-31px;background:#10132a;border-radius:99px;z-index:3}
+.screen{height:100%;border-radius:36px;background:#f8faff;overflow:hidden;padding:40px 13px 13px;display:flex;flex-direction:column;gap:9px;color:var(--c)}
+.ph-top{display:flex;justify-content:space-between;align-items:center;font:700 10px var(--f-mono);letter-spacing:.06em;color:var(--m)}
+.live{display:flex;align-items:center;gap:6px;color:var(--bad)}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--bad);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+.chips{display:flex;gap:6px}
+.chip{flex:1;padding:8px 6px;border-radius:12px;border:1px solid var(--ln);background:#fff;font:700 13px var(--f-body);text-align:center;transition:.2s}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.quote{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.q{border-radius:14px;padding:8px 12px;display:flex;justify-content:space-between;align-items:baseline}
+.q small{font:700 10px var(--f-mono);letter-spacing:.1em}
+.q b{font:700 26px var(--f-mono);letter-spacing:-.05em}
+.q.back{background:#dbe8ff;color:#1d4ed8}
+.q.lay{background:#ffe1ec;color:#be185d}
+.q b.up{animation:up .5s}.q b.dn{animation:dn .5s}
+@keyframes up{from{color:var(--ok);transform:translateY(5px)}}
+@keyframes dn{from{color:var(--bad);transform:translateY(-5px)}}
+.lockbar{height:3px;border-radius:3px;background:var(--bg3);overflow:hidden}
+.lockbar i{display:block;height:100%;width:0;background:var(--grad)}
+.seg{display:inline-flex;background:var(--bg3);border-radius:12px;padding:3px;gap:2px}
+.seg button{padding:6px 12px;border-radius:9px;font:700 12px var(--f-body);color:var(--m);transition:.2s}
+.seg button.on{background:#fff;color:var(--c);box-shadow:0 1px 3px rgba(16,20,38,.15)}
+.seg button.on.back{background:#2563eb;color:#fff}
+.seg button.on.lay{background:#d6336c;color:#fff}
+.modebar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--m);font-weight:600}
+.armed{font:500 11px var(--f-mono);color:#b45309;background:#fff3e0;border-radius:12px;padding:8px 10px;line-height:1.4}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:7px;transition:opacity .2s}
+.pads.locked{opacity:.55}
+.pad{position:relative;text-align:left;padding:9px 11px;border-radius:15px;background:#fff;border:1px solid var(--ln);box-shadow:0 1px 2px rgba(16,20,38,.05);overflow:hidden;transition:transform .12s,box-shadow .2s}
+.pad:hover{box-shadow:0 6px 16px -6px rgba(16,20,38,.25)}
+.pad:active{transform:scale(.95)}
+.pad b{display:block;font:800 16px var(--f-head);letter-spacing:-.02em;color:var(--c)}
+.pad span{display:flex;gap:6px;align-items:center;font:700 10px var(--f-mono);color:var(--m);margin-top:2px}
+.pad .sd{padding:1px 5px;border-radius:5px;font-style:normal}
+.pad .sd.BACK{background:#dbe8ff;color:#1d4ed8}.pad .sd.LAY{background:#ffe1ec;color:#be185d}
+.pad.hit::after{content:"";position:absolute;inset:0;background:var(--grad);opacity:.5;animation:flash .5s forwards}
+@keyframes flash{to{opacity:0}}
+.mini{margin-top:auto;font:500 10.5px var(--f-mono);color:var(--m);display:grid;gap:3px}
+.mini div{display:flex;justify-content:space-between;gap:8px;white-space:nowrap;overflow:hidden}
+.mini .p{color:#0e9f5f}.mini .r{color:var(--bad)}.mini .k{color:#b45309}
+
+/* how: bright 3D fly-through */
+.how{position:relative;z-index:1;height:460vh;background:#d9eeff;color:var(--ink)}
+.how-pin{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;
+  background:radial-gradient(420px 420px at 86% 12%,#fff6d0,rgba(255,246,208,0) 70%),linear-gradient(#bfe2ff 0%,#e4f4ff 46%,#fff8ea 62%)}
+.how-pin::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(180px 60px at 18% 24%,rgba(255,255,255,.95),transparent 70%),radial-gradient(240px 70px at 60% 16%,rgba(255,255,255,.9),transparent 70%),radial-gradient(200px 60px at 92% 34%,rgba(255,255,255,.85),transparent 70%)}
+.how-head{position:absolute;z-index:5;left:max(16px,calc((100% - 1180px)/2));right:16px;top:92px;max-width:520px}
+.how-head h2{font-size:clamp(30px,4.2vw,52px);margin-top:12px;color:var(--ink)}
+.viewport{position:absolute;inset:0;perspective:1050px;perspective-origin:50% 28%;overflow:hidden}
+.cam{position:absolute;left:50%;top:56%;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.world{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.floor{position:absolute;left:-1500px;top:0;width:3000px;height:5600px;transform-origin:50% 0;transform:translate3d(0,170px,2400px) rotateX(-90deg);
+  background:repeating-linear-gradient(180deg,#62d492 0 200px,#52c783 200px 400px);transform-style:preserve-3d}
+.floor::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(228,244,255,0) 0%,rgba(228,244,255,0) 80%,#e4f4ff 100%)}
+.pitch{position:absolute;left:1380px;top:0;width:240px;height:100%;background:linear-gradient(90deg,#ecd29a,#f6e3b8 45%,#e9cf97);box-shadow:0 0 0 3px rgba(255,255,255,.5)}
+.crease{position:absolute;left:1370px;width:260px;height:6px;background:#fff;opacity:.95}
+.st{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.box{position:relative;transform-style:preserve-3d}
+.face{position:absolute;backface-visibility:hidden;overflow:hidden}
+.tag{position:absolute;white-space:nowrap;transform-style:preserve-3d;text-align:center;font:800 54px/1 var(--f-head);letter-spacing:-.04em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 8px 14px rgba(255,122,26,.35));opacity:.4;transition:opacity .5s}
+.tag small{display:block;font:700 12px var(--f-mono);letter-spacing:.16em;color:var(--ink);-webkit-text-fill-color:var(--ink);margin-top:4px}
+.st.on .tag{opacity:1}
+.pf{height:100%;background:#fff;padding:30px 10px 10px;display:flex;flex-direction:column;gap:7px;color:var(--ink);border-radius:14px}
+.pf .nt{position:absolute;top:8px;left:50%;width:34px;height:8px;margin-left:-17px;background:#10132a;border-radius:9px}
+.pf .qq{display:flex;gap:5px;font:700 15px var(--f-mono)}.pf .qq span{flex:1;border-radius:9px;padding:5px 7px}
+.pf .qq .b{background:#dbe8ff;color:#1d4ed8}.pf .qq .l{background:#ffe1ec;color:#be185d}
+.pf .bt{border-radius:10px;padding:8px 9px;background:#eef2fb;font:800 15px var(--f-head);letter-spacing:-.02em;position:relative}
+.pf .bt small{display:block;font:700 9px var(--f-mono);color:var(--mute)}
+.pf .bt.hot{background:var(--grad);color:#fff}.pf .bt.hot small{color:rgba(255,255,255,.85)}
+.finger{position:absolute;right:12px;bottom:34px;width:34px;height:34px;border-radius:50%;border:3px solid var(--blue);opacity:0}
+.st.on .finger{animation:tap 1.6s infinite}
+@keyframes tap{0%{opacity:0;transform:scale(1.7)}30%{opacity:1;transform:scale(.8)}60%,100%{opacity:0;transform:scale(1.9)}}
+.rack{height:100%;background:linear-gradient(#ffffff,#eef2fb);padding:14px 12px;display:flex;flex-direction:column;gap:9px;font:500 12px var(--f-mono);color:var(--ink);border:3px solid #d5dcf0;border-radius:6px}
+.rack h4{font:800 17px var(--f-head);letter-spacing:-.02em;color:var(--blue)}
+.rack .row{display:flex;align-items:center;gap:8px;padding:7px 8px;background:#fff;border:1px solid var(--line);border-radius:9px;line-height:1.25}
+.rack .led{flex:none;width:10px;height:10px;border-radius:50%;background:#c9d0e6}
+.st.on .rack .led{animation:led 3.2s infinite}
+.rack .row:nth-child(3) .led{animation-delay:.5s}.rack .row:nth-child(4) .led{animation-delay:1s}
+@keyframes led{0%,12%{background:#c9d0e6;box-shadow:none}22%,100%{background:#12b76a;box-shadow:0 0 12px #12b76a}}
+.vent{background:repeating-linear-gradient(0deg,#d5dcf0 0 6px,#e9edf8 6px 12px)}
+.gate-plate{position:absolute;inset:0;border-radius:150px 150px 0 0;border:5px solid #ffb02e}
+.gate-front{display:grid;place-items:end center;padding-bottom:30px;text-align:center;background:linear-gradient(#ffffff,#f1f4fc)}
+.gate-front::before{content:"";position:absolute;left:44px;right:44px;top:56px;bottom:0;border-radius:110px 110px 0 0;background:radial-gradient(circle at 50% 85%,#ffe0a8,#fff3dc 70%);border:3px solid var(--orange)}
+.gate-front b{position:relative;font:800 22px var(--f-head);letter-spacing:-.03em;color:var(--ink);display:block}
+.gate-front small{position:relative;display:block;font:700 11px var(--f-mono);color:var(--orange);letter-spacing:.08em}
+.packet{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;transform-style:preserve-3d}
+.pshadow{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(16,20,38,.35);filter:blur(4px)}
+.dot3{position:absolute;left:0;top:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:rgba(255,255,255,.7);transition:background .3s,box-shadow .3s}
+.dot3.lit{background:var(--orange);box-shadow:0 0 14px rgba(255,122,26,.9)}
+.placed3{position:absolute;left:0;top:0;font:800 28px/1 var(--f-head);letter-spacing:-.02em;color:#fff;background:var(--green);padding:10px 18px;border-radius:14px;box-shadow:0 12px 24px -6px rgba(18,183,106,.6);opacity:0;transform:scale(2.2) rotate(-8deg);transition:opacity .4s,transform .4s;white-space:nowrap}
+.placed3.show{opacity:1;transform:scale(1) rotate(-6deg)}
+.how-hud{position:absolute;z-index:5;left:0;right:0;bottom:0;padding:0 0 22px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;list-style:none;padding:0}
+.steps li{padding:16px 20px;border-radius:20px;background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.9);box-shadow:var(--sh1);opacity:.8;transform:translateY(8px);transition:.45s}
+.steps li.on{opacity:1;transform:none;box-shadow:0 0 0 2px var(--orange),0 18px 36px -14px rgba(255,122,26,.55)}
+.steps .n{font:700 11px var(--f-mono);color:var(--orange);letter-spacing:.1em}
+.steps h3{font-size:24px;margin:2px 0 4px;color:var(--ink)}
+.steps p{color:var(--ink2);font-size:14.5px;line-height:1.45}
+.hint{position:absolute;z-index:5;right:max(16px,calc((100% - 1180px)/2));top:104px;font:700 11px var(--f-mono);letter-spacing:.16em;color:var(--ink2);text-align:right;transition:opacity .4s}
+.hint i{display:block;width:2px;height:34px;margin:8px 0 0 auto;background:linear-gradient(var(--orange),transparent);animation:drip 1.4s infinite}
+@keyframes drip{from{transform:scaleY(0);transform-origin:top}60%{transform:scaleY(1);transform-origin:top}to{transform:scaleY(1);transform-origin:bottom;opacity:0}}
+
+/* views */
+.views .wrap>div:first-child{margin-bottom:46px}
+.win{border-radius:22px;border:1px solid var(--line);background:#fff;box-shadow:var(--sh2);overflow:hidden;color:var(--c)}
+.win-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--bg1);border-bottom:1px solid var(--line)}
+.win-bar i{width:11px;height:11px;border-radius:50%}
+.win-bar i:nth-child(1){background:#ff5f57}.win-bar i:nth-child(2){background:#febc2e}.win-bar i:nth-child(3){background:#28c840}
+.win-bar .url{margin-left:10px;flex:1;max-width:340px;font:500 12px var(--f-mono);color:var(--m);background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.win-body{display:grid;grid-template-columns:190px minmax(0,1fr);min-height:420px}
+.side{border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px;background:var(--bg1)}
+.side button{text-align:left;padding:11px 14px;border-radius:12px;color:var(--m);font-weight:700;font-size:14.5px;transition:.2s}
+.side button:hover{background:#fff}
+.side button[aria-selected=true]{background:#fff;color:var(--orange);box-shadow:var(--sh1)}
+.panel{padding:24px;min-width:0}
+.panel[hidden]{display:none}
+.panel h3{font-size:26px;margin-bottom:4px;color:var(--c)}
+.panel .sub{color:var(--m);font-size:15px;margin-bottom:18px}
+.limit{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:16px;font-size:14px;color:var(--m);font-weight:600}
+.plist{list-style:none;padding:0;display:grid;gap:8px}
+.prow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 14px;border-radius:16px;background:var(--bg1);border:1px solid transparent;transition:.2s}
+.prow:hover{border-color:var(--ln);background:#fff;box-shadow:var(--sh1)}
+.prow.off{opacity:.5}
+.pname{font:800 17px var(--f-head);letter-spacing:-.02em;min-width:86px;flex:1 1 86px}
+.sw{width:42px;height:24px;border-radius:99px;background:#cdd3e6;position:relative;flex:none;transition:.2s}
+.sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,20,38,.3);transition:.2s}
+.sw[aria-checked=true]{background:var(--green)}.sw[aria-checked=true] i{transform:translateX(18px)}
+.step{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--m);font-weight:600}
+.step .lab{width:44px}
+.step button{width:30px;height:30px;border-radius:50%;border:1px solid var(--ln);background:#fff;font:700 16px/1 var(--f-body);display:grid;place-items:center;transition:.15s;color:var(--c)}
+.step button:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.step output{min-width:48px;text-align:center;font:700 14px var(--f-mono);color:var(--c)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{padding:18px;border-radius:18px;background:var(--bg1);border:1px solid var(--ln);display:grid;gap:10px;align-content:start}
+.card .t{font:700 11.5px var(--f-label);letter-spacing:.08em;text-transform:uppercase;color:var(--m)}
+.owrap{display:grid;gap:10px}
+.orow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;background:var(--bg1)}
+.orow b{font:800 19px var(--f-head);letter-spacing:-.02em}
+
+/* custom select */
+.sel{position:relative}
+.sel-btn{width:100%;display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px 12px;border-radius:12px;border:1px solid var(--ln);background:#fff;font:700 12.5px var(--f-body);text-align:left;color:var(--c)}
+.sel-btn svg{width:14px;height:14px;stroke:var(--m);fill:none;stroke-width:2;flex:none;transition:transform .2s}
+.sel-btn[aria-expanded=true] svg{transform:rotate(180deg)}
+.sel-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sel-pop{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);list-style:none;margin:0;padding:5px;border-radius:14px;background:#fff;border:1px solid var(--ln);box-shadow:var(--sh2);transform-origin:top;animation:pop .16s;color:var(--c)}
+.sel-pop[hidden]{display:none}
+.sel-pop li{padding:9px 10px;border-radius:9px;font:600 13px var(--f-body);cursor:pointer}
+.sel-pop li.act,.sel-pop li:hover{background:#fff3e8}
+.sel-pop li[aria-selected=true]{color:var(--orange);font-weight:800}
+@keyframes pop{from{opacity:0;transform:scaleY(.92) translateY(-4px)}}
+
+/* safety */
+.safe-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:46px}
+.sc{padding:20px;border-radius:26px;background:#fff;border:1px solid var(--line);box-shadow:var(--sh1);transition:transform .3s,box-shadow .3s,opacity .7s;display:flex;flex-direction:column;gap:10px;min-height:280px;color:var(--ink)}
+.sc.in:hover{transform:translateY(-8px);box-shadow:var(--sh2)}
+.sc h3{font-size:22px}.sc p{font-size:15px;color:var(--ink2)}
+.sc .band{display:none}
+.viz{height:96px;border-radius:18px;background:linear-gradient(160deg,#fff4e4,#e9eeff);display:grid;place-items:center;overflow:hidden;position:relative;font:700 12px var(--f-mono);color:var(--c)}
+.viz svg{width:62px;height:62px}
+.viz circle.t{fill:none;stroke:rgba(16,20,38,.1);stroke-width:5}
+.viz circle.f{fill:none;stroke:var(--orange);stroke-width:5;stroke-linecap:round;stroke-dasharray:157;animation:ring 4s linear infinite;transform:rotate(-90deg);transform-origin:center}
+@keyframes ring{from{stroke-dashoffset:0}to{stroke-dashoffset:157}}
+.taps{display:flex;gap:8px}
+.taps span{padding:8px 12px;border-radius:10px;background:#fff;box-shadow:var(--sh1)}
+.taps span:nth-child(2){color:var(--bad);animation:blk 3s infinite}
+@keyframes blk{0%,35%{opacity:0;transform:translateX(-10px)}45%,90%{opacity:1;transform:none}100%{opacity:0}}
+.cmp{display:grid;gap:6px;width:80%}
+.cmp div{display:flex;justify-content:space-between}
+.cmp .bar{height:6px;border-radius:6px;background:rgba(16,20,38,.1);position:relative;overflow:hidden}
+.cmp .bar i{position:absolute;inset:0;width:70%;background:var(--ok);animation:chk 3.2s infinite}
+@keyframes chk{0%,40%{width:30%;background:var(--ok)}60%,100%{width:92%;background:var(--bad)}}
+.logv{align-items:start;justify-items:start;padding:12px 14px;font-weight:500;line-height:1.6;color:var(--m)}
+.logv span{display:block;white-space:nowrap;animation:ln 6s infinite}
+.logv span:nth-child(2){animation-delay:.6s}.logv span:nth-child(3){animation-delay:1.2s;color:var(--bad)}
+@keyframes ln{0%{opacity:0;transform:translateX(-8px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
+
+/* bet log */
+.logbox{margin-top:42px;border-radius:26px;border:1px solid var(--line);background:#fff;overflow:hidden;box-shadow:var(--sh2);color:var(--c)}
+.logtop{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--bg1)}
+.logtop .ttl{font:800 18px var(--f-head);letter-spacing:-.02em}
+.lrows{list-style:none;padding:0;max-height:430px;overflow:auto}
+.lrow{display:grid;grid-template-columns:84px 60px minmax(0,1.4fr) 62px 62px 70px 96px;gap:10px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);font-size:15px;font-weight:600;animation:slide .4s}
+@keyframes slide{from{opacity:0;transform:translateY(-10px);background:#fff3e0}}
+.lrow time,.lrow .px,.lrow .stk{font-family:var(--f-mono);font-size:14px;font-weight:700}
+.lrow .who{color:var(--m)}
+.lrow .side-t{font:700 11px var(--f-mono)}
+.lrow .side-t.BACK{color:#1d4ed8}.lrow .side-t.LAY{color:#be185d}
+.lrow .stat{font:700 11px var(--f-label);text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:99px;text-align:center}
+.lrow.placed .stat{background:#d9f7e8;color:#0a7d49}
+.lrow.rejected .stat{background:#fde1de;color:#c0281d}
+.lrow.blocked .stat{background:#fff0d6;color:#b45309}
+.lrow .note{grid-column:3/-1;font-size:12.5px;color:var(--m);font-weight:500;margin-top:-6px}
+.empty{padding:30px;text-align:center;color:var(--m)}
+
+/* scope */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:44px}
+.box2{position:relative;padding:34px 28px 28px;border-radius:28px;background:#fff;border:1px solid var(--line);box-shadow:var(--sh1);overflow:hidden}
+.box2::before{content:"";position:absolute;left:0;right:0;top:0;height:5px}
+.box2.yes::before{background:linear-gradient(90deg,#12b76a,#5fe0a0)}.box2.no::before{background:linear-gradient(90deg,#f04438,#ff8f87)}
+.box2 h3{font-size:28px;margin-bottom:16px}
+.box2 .stp{position:absolute;right:20px;top:22px;font:800 12px var(--f-label);letter-spacing:.1em;padding:5px 12px;border-radius:99px}
+.box2.yes .stp{background:#d9f7e8;color:#0a7d49}.box2.no .stp{background:#fde1de;color:#c0281d}
+.box2 ul{list-style:none;padding:0;display:grid;gap:12px}
+.box2 li{display:flex;gap:12px;font-size:16px;font-weight:500}
+.box2 li::before{content:"";flex:none;width:22px;height:22px;margin-top:2px;border-radius:50%;background:var(--green) center/11px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 5.2l2.4 2.4 4.6-5' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")}
+.box2.no li::before{background:var(--red) center/11px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 2l6 6M8 2l-6 6' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")}
+.tl{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:54px}
+.tl div{position:relative;padding-top:40px}
+.tl div::before{content:"";position:absolute;top:13px;left:0;right:-14px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--amber))}
+.tl div:last-child::before{right:0;background:repeating-linear-gradient(90deg,#cfd5e8 0 8px,transparent 8px 16px)}
+.tl div::after{content:"";position:absolute;top:0;left:0;width:28px;height:28px;border-radius:50%;background:#fff;border:6px solid var(--orange);box-shadow:0 0 0 6px rgba(255,122,26,.15)}
+.tl b{font:800 24px var(--f-head);letter-spacing:-.03em;display:block}
+.tl span{font-size:15px;color:var(--ink2)}
+.req{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.rq{display:flex;gap:14px;align-items:center;text-align:left;padding:16px 18px;border-radius:20px;border:1px solid var(--line);background:#fff;transition:.2s;font-size:15.5px;font-weight:600;box-shadow:var(--sh1)}
+.rq:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.rq i{flex:none;width:26px;height:26px;border-radius:9px;border:2px solid #c5cce2;display:grid;place-items:center;background:#fff;transition:.2s}
+.rq[aria-checked=true]{border-color:#a8e6c6;background:#f2fcf7}
+.rq[aria-checked=true] i{background:var(--green);border-color:var(--green)}
+.rq[aria-checked=true] i::after{content:"";width:5px;height:11px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.count{font:700 14px var(--f-mono);color:var(--orange);margin-top:16px}
+footer{position:relative;z-index:1;background:var(--bg1);border-top:1px solid var(--line);color:var(--ink2);padding:40px 0 60px;font-size:14px}
+footer p{max-width:80ch}
+footer .brand{margin-bottom:12px;color:var(--ink)}
+
+/* overlays */
+.toasts{position:fixed;z-index:95;right:16px;bottom:16px;display:grid;gap:10px;width:min(380px,calc(100% - 32px))}
+.toast{padding:14px 18px;border-radius:18px;background:#fff;color:var(--ink);border:1px solid var(--line);border-left:5px solid var(--green);font-weight:700;font-size:14.5px;box-shadow:var(--sh2);animation:tin .3s}
+.toast.warn{border-left-color:var(--orange)}
+@keyframes tin{from{opacity:0;transform:translateY(14px)}}
+.modal{position:fixed;inset:0;z-index:96;display:grid;place-items:center;padding:16px;background:rgba(16,20,38,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.dlg{width:min(430px,100%);padding:30px;border-radius:28px;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--sh2);animation:dlg .25s cubic-bezier(.2,.8,.2,1)}
+@keyframes dlg{from{opacity:0;transform:translateY(20px) scale(.96)}}
+.dlg h3{font-size:28px;margin-bottom:10px}.dlg p{color:var(--ink2);margin-bottom:24px}
+.dlg .row{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.fx .fb{position:absolute;left:0;top:0;width:36px;height:36px;opacity:0}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:61;animation:fl .7s forwards}
+@keyframes fl{0%{box-shadow:inset 0 0 120px 30px rgba(240,68,56,.5)}100%{box-shadow:inset 0 0 120px 30px rgba(240,68,56,0)}}
+
+/* responsive */
+@media (max-width:1020px){
+  .hero .wrap{grid-template-columns:minmax(0,1fr)}
+  .safe-grid{grid-template-columns:1fr 1fr}
+  .lrow{grid-template-columns:76px 54px minmax(0,1fr) 56px 58px 92px}
+  .lrow .stk{display:none}
+  .chipf.c1{left:-8px}.chipf.c2{right:-6px}.chipf.c3{right:-6px}
+}
+@media (max-width:820px){
+  .top nav{display:none}
+  .win-body{grid-template-columns:1fr}
+  .side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .side button{white-space:nowrap}
+  .two{grid-template-columns:1fr}
+  .tl{grid-template-columns:1fr 1fr;gap:26px 14px}
+  .steps{grid-template-columns:1fr}
+  .steps li:not(.on){display:none}
+  .how-head{top:80px}
+  .hint{display:none}
+}
+@media (max-width:560px){
+  .safe-grid{grid-template-columns:1fr}
+  .lrow{grid-template-columns:62px minmax(0,1fr) 52px 54px;gap:8px;padding:12px 14px;border-left:4px solid transparent}
+  .lrow.placed{border-left-color:var(--ok)}.lrow.rejected{border-left-color:var(--bad)}.lrow.blocked{border-left-color:var(--orange)}
+  .lrow .who,.lrow .stat{display:none}
+  .lrow .note{grid-column:1/-1}
+  .tl{grid-template-columns:1fr}
+  .tl div::before{display:none}
+  .top .pill{font-size:11px;padding:5px 10px}
+  .panel{padding:16px}
+  .sticker-ball{width:88px;height:88px;left:-6px}
+  .chipf{font-size:12px;padding:8px 11px}
+  .chipf.c1{top:14px}.chipf.c2{top:auto;bottom:100px}.chipf.c3{display:none}
+  .hero{padding-top:110px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js')</script>
+<div class="spot" aria-hidden="true"></div>
+<div class="ring" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"><i id="bar"></i></div>
+<div class="fx" id="fx" aria-hidden="true"><div class="fb" id="fb"></div></div>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="TickTap home"><span class="b" data-ball></span>TickTap</a>
+  <nav aria-label="Sections"><a href="#how">How it works</a><a href="#views">Two views</a><a href="#safety">Safety</a><a href="#log">Bet log</a><a href="#scope">Scope</a></nav>
+  <span class="pill">Demo &middot; simulated data</span>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <p class="eyebrow rv">Offset bet controller &middot; working demo <span class="dv">&#2330;&#2354;&#2379;, &#2358;&#2369;&#2352;&#2370; &#2325;&#2352;&#2375;&#2306;</span></p>
+      <h1 class="rv">The ball is bowled. Your bet is <span class="mark">already<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 13 C 40 3, 100 19, 150 8 S 190 6, 198 9"/></svg></span> in.
+        <span class="sub">Tap once on your phone. Done in a few ticks.</span></h1>
+      <p class="lede rv">Tap a preset on your Android phone. A small service places a back or lay a few ticks off the live price, straight through the Betfair API. Change stakes and outcomes from any desktop browser. No hotkeys, no ladder clicks.</p>
+      <div class="cta rv">
+        <a class="btn primary mag" href="#stage">Try the phone &darr;</a>
+        <a class="btn ghost mag" href="#scope">Scope and timeline</a>
+      </div>
+      <dl class="facts rv">
+        <div><dt>1</dt><dd>web panel,<br>two views</dd></div>
+        <div><dt>7 days</dt><dd>to stage one<br>after funding</dd></div>
+        <div><dt>0</dt><dd>hotkeys.<br>API only.</dd></div>
+      </dl>
+    </div>
+
+    <div class="stage dk" id="stage">
+      <div class="arch">
+        <div class="chipf c1" aria-hidden="true"><i></i>Token renewed</div><div class="chipf c2" aria-hidden="true">Offset <b>+2 ticks</b></div><div class="chipf c3" aria-hidden="true">Bet placed <b>#4021</b></div>
+        <div class="tilt" data-tilt="9">
+          <div class="phone" aria-label="Phone controller demo">
+            <div class="screen">
+              <div class="ph-top"><span class="live"><i></i>LIVE</span><span id="sess">token 0:60</span></div>
+              <div class="sel" id="marketSel"></div>
+              <div class="chips" id="outChips"></div>
+              <div class="quote">
+                <div class="q back"><small>BACK</small><b id="qb">1.95</b></div>
+                <div class="q lay"><small>LAY</small><b id="ql">1.96</b></div>
+              </div>
+              <div class="lockbar" aria-hidden="true"><i id="lockbar"></i></div>
+              <div class="modebar"><span>Mode</span><div class="seg" id="phoneMode"></div></div>
+              <div class="armed" id="armed" hidden></div>
+              <div class="pads" id="pads"></div>
+              <div class="mini" id="mini"></div>
+            </div>
+          </div>
+        </div>
+        <div class="sticker-ball" data-ball aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="how-pin dk">
+    <div class="how-head">
+      <p class="eyebrow">01 / how it works <span class="dv">&#2325;&#2376;&#2360;&#2375; &#2330;&#2354;&#2340;&#2366; &#2361;&#2376;</span></p>
+      <h2>Three hops. Nothing else in the way.</h2>
+    </div>
+    <div class="hint" id="hint">SCROLL<i></i></div>
+    <div class="viewport" id="viewport">
+      <div class="cam" id="cam"><div class="world" id="world"></div></div>
+    </div>
+    <div class="how-hud"><div class="wrap">
+      <ol class="steps" id="steps">
+        <li><span class="n">STEP 1 / 3</span><h3>Tap</h3><p>Your Android phone sends one small request with the preset id. The preset holds side, offset and stake.</p></li>
+        <li><span class="n">STEP 2 / 3</span><h3>Check</h3><p>The server reads the live price, moves it by your ticks, then checks stake, session token and the duplicate lock.</p></li>
+        <li><span class="n">STEP 3 / 3</span><h3>Place</h3><p>The bet goes out through the official API. The answer, accepted or rejected, lands in your bet log.</p></li>
+      </ol>
+    </div></div>
+  </div>
+</section>
+
+<section class="sec alt views" id="views">
+  <div class="wrap">
+    <div class="rv">
+      <p class="eyebrow">02 / two views, one panel <span class="dv">&#2342;&#2379; &#2352;&#2370;&#2346;, &#2319;&#2325; &#2346;&#2376;&#2344;&#2354;</span></p>
+      <h2>Settings on the desktop. Triggers on the phone.</h2>
+      <p class="lede">The desktop view has no fire buttons, only settings. Change something here and the phone above updates at once. Try it: switch an outcome off, or change an offset, then look at the phone.</p>
+    </div>
+    <div class="win dk rv" data-tilt="2.5">
+      <div class="win-bar"><i></i><i></i><i></i><span class="url">your-server.example/settings</span></div>
+      <div class="win-body">
+        <div class="side" role="tablist" aria-label="Settings">
+          <button role="tab" aria-selected="true" data-act="tab" data-t="presets">Presets</button>
+          <button role="tab" aria-selected="false" data-act="tab" data-t="outcomes">Outcomes</button>
+          <button role="tab" aria-selected="false" data-act="tab" data-t="rules">Rules</button>
+        </div>
+        <div>
+          <div class="panel" data-panel="presets">
+            <h3>Trigger presets</h3>
+            <p class="sub">Side, offset in ticks and stake for each phone button.</p>
+            <div class="limit"><span>Safety limit per bet</span><div class="step"><button data-act="lim" data-d="-5" aria-label="Lower limit">&minus;</button><output id="limOut"></output><button data-act="lim" data-d="5" aria-label="Raise limit">+</button></div></div>
+            <ul class="plist" id="plist"></ul>
+          </div>
+          <div class="panel" data-panel="outcomes" hidden>
+            <h3>Outcomes</h3>
+            <p class="sub">Select or deselect what the phone can trade. At least one must stay on.</p>
+            <div class="owrap" id="owrap"></div>
+          </div>
+          <div class="panel" data-panel="rules" hidden>
+            <h3>Rule-based mode</h3>
+            <p class="sub">The service watches the price and sends one bet when your rule is true. A cooldown stops repeats.</p>
+            <div class="rules">
+              <div class="card"><span class="t">Mode</span><div class="seg" id="deskMode"></div></div>
+              <div class="card"><span class="t">Minimum back odds</span><div class="step"><button data-act="rule" data-f="min" data-d="-1" aria-label="Lower odds">&minus;</button><output id="rMin"></output><button data-act="rule" data-f="min" data-d="1" aria-label="Raise odds">+</button></div></div>
+              <div class="card"><span class="t">Overs window</span><div class="sel" id="winSel"></div></div>
+              <div class="card"><span class="t">Cooldown</span><div class="step"><button data-act="rule" data-f="cool" data-d="-5" aria-label="Shorter">&minus;</button><output id="rCool"></output><button data-act="rule" data-f="cool" data-d="5" aria-label="Longer">+</button></div></div>
+              <div class="card"><span class="t">Rule stake</span><div class="step"><button data-act="rule" data-f="stake" data-d="-5" aria-label="Lower">&minus;</button><output id="rStake"></output><button data-act="rule" data-f="stake" data-d="5" aria-label="Higher">+</button></div></div>
+              <div class="card"><span class="t">Demo helper</span><button class="btn ghost sm" data-act="jump">Simulate odds jump</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="safety">
+  <div class="wrap">
+    <div class="rv">
+      <p class="eyebrow">03 / built not to miss, not to double <span class="dv">&#2360;&#2369;&#2352;&#2325;&#2381;&#2359;&#2366;</span></p>
+      <h2>Boring on purpose. That is the point.</h2>
+      <p class="lede">Real money needs plain, careful code. These checks run on every bet. Nobody can promise perfect uptime or profit, so the service reports honestly what happened.</p>
+    </div>
+    <div class="safe-grid dk">
+      <article class="sc rv"><div class="band"></div><div class="viz"><svg viewBox="0 0 60 60"><circle class="t" cx="30" cy="30" r="25"/><circle class="f" cx="30" cy="30" r="25"/></svg></div><h3>Session renewal</h3><p>The login token is renewed before it runs out, and the retry is logged.</p></article>
+      <article class="sc rv"><div class="band"></div><div class="viz"><div class="taps"><span>tap</span><span>tap</span></div></div><h3>Duplicate lock</h3><p>A second tap or repeated poll inside the lock window is ignored and logged.</p></article>
+      <article class="sc rv"><div class="band"></div><div class="viz"><div class="cmp"><div><span>wanted 1.98</span><span>now 2.10</span></div><div class="bar"><i></i></div></div></div><h3>Final price check</h3><p>Price and stake are checked a last time. Moved too far, nothing is sent.</p></article>
+      <article class="sc rv"><div class="band"></div><div class="viz logv"><span>12:01:07 placed #4018</span><span>12:01:52 placed #4019</span><span>12:02:30 rejected #4020</span></div><h3>Clear error log</h3><p>Every accepted, rejected or blocked request is written down with a reason.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt" id="log">
+  <div class="wrap">
+    <div class="rv">
+      <p class="eyebrow">04 / the bet log <span class="dv">&#2361;&#2367;&#2360;&#2366;&#2348;-&#2325;&#2367;&#2340;&#2366;&#2348;</span></p>
+      <h2>Every tap leaves a line.</h2>
+      <p class="lede">Tap presets on the phone and watch this list fill in. Tap twice quickly to see the duplicate lock log a blocked request.</p>
+    </div>
+    <div class="logbox dk rv">
+      <div class="logtop"><span class="ttl">BET LOG</span><div class="seg" id="filters"></div><span id="logCount" style="font:500 12px var(--f-mono);color:var(--m)"></span></div>
+      <ul class="lrows" id="lrows"></ul>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="scope">
+  <div class="wrap">
+    <div class="rv">
+      <p class="eyebrow">05 / scope and timeline <span class="dv">&#2342;&#2366;&#2351;&#2352;&#2366;</span></p>
+      <h2>What you get. What stays out.</h2>
+    </div>
+    <div class="two">
+      <div class="box2 yes rv"><span class="stp">IN</span><h3>In this project</h3><ul>
+        <li>Betfair login with automatic session renewal</li>
+        <li>Offset bet placement through the API, back or lay</li>
+        <li>Phone trigger page, installable on Android</li>
+        <li>Desktop settings page: values, stakes, outcomes</li>
+        <li>Rule-based mode with cooldown and final check</li>
+        <li>Bet log, short README, demo video</li></ul></div>
+      <div class="box2 no rv"><span class="stp">OUT</span><h3>Not in this project</h3><ul>
+        <li>Price ladder or Bet Angel link</li>
+        <li>Native Android or desktop apps</li>
+        <li>Live score or ball-by-ball data feed</li>
+        <li>Hotkeys or screen clicking</li>
+        <li>Any promise of profit or speed</li></ul></div>
+    </div>
+    <div class="tl rv">
+      <div><b>Day 0</b><span>Award and funded stage one milestone</span></div>
+      <div><b>Day 7</b><span>Stage one: login, offset bets, both views, log</span></div>
+      <div><b>Day 12</b><span>Full project: rules mode, tests, README</span></div>
+      <div><b>Live test</b><span>When the account holder&rsquo;s live key is active</span></div>
+    </div>
+    <h3 style="font-size:32px;margin-top:60px" class="rv">What I need from you</h3>
+    <div class="req rv" id="req"></div>
+    <p class="count" id="reqCount"></p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap"><div class="brand"><span class="b" data-ball></span>TickTap</div><p>Demo build with simulated prices and bets. It is not connected to Betfair or any bookmaker. No profit is promised. The account holder is responsible for following Betfair&rsquo;s terms and local law, and for keeping their own keys and login private.</p></div>
+</footer>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="modalRoot"></div>
+<noscript><p style="padding:20px">This demo needs JavaScript.</p></noscript>
+
+<script>
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fine=matchMedia('(pointer:fine)').matches;
+const POUND='\u00a3';
+
+/* ---------- cricket ball (inline SVG, seam rolls inside a clip) ---------- */
+let ballN=0;
+const BALL=()=>{const n=++ballN;return `<svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true">
+<defs><clipPath id="bc${n}"><circle cx="100" cy="100" r="96"/></clipPath>
+<radialGradient id="bg${n}" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#ff6b7d"/><stop offset=".45" stop-color="#c1121f"/><stop offset="1" stop-color="#4a0614"/></radialGradient>
+<radialGradient id="bs${n}" cx=".5" cy=".5" r=".5"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>
+<circle cx="100" cy="100" r="96" fill="url(#bg${n})"/>
+<g clip-path="url(#bc${n})"><g class="seam${n}">
+<path d="M-200 100 Q-150 40 -100 100 T0 100 T100 100 T200 100 T300 100 T400 100" fill="none" stroke="#3a0610" stroke-width="5"/>
+<path d="M-200 92 Q-150 32 -100 92 T0 92 T100 92 T200 92 T300 92 T400 92" fill="none" stroke="#f6e6d0" stroke-width="2.2" stroke-dasharray="5 6"/>
+<path d="M-200 108 Q-150 48 -100 108 T0 108 T100 108 T200 108 T300 108 T400 108" fill="none" stroke="#f6e6d0" stroke-width="2.2" stroke-dasharray="5 6"/>
+</g></g>
+<circle cx="100" cy="100" r="96" fill="url(#bs${n})"/>
+<ellipse cx="68" cy="54" rx="30" ry="16" fill="#fff" opacity=".28" transform="rotate(-32 68 54)"/>
+<style>.seam${n}{animation:roll${n} ${reduce?0:3.2}s linear infinite}@keyframes roll${n}{to{transform:translateX(200px)}}</style></svg>`};
+$$('[data-ball]').forEach(e=>{e.innerHTML=BALL()});
+$('#fb').innerHTML=BALL();
+
+/* ---------- Betfair price ladder (valid tick sizes) ---------- */
+const BANDS=[[1.01,2,.01],[2,3,.02],[3,4,.05],[4,6,.1],[6,10,.2],[10,20,.5],[20,30,1],[30,50,2],[50,100,5],[100,1000,10]];
+const L=[];
+BANDS.forEach(([lo,hi,st])=>{for(let x=Math.round(lo*100);x<Math.round(hi*100);x+=Math.round(st*100))L.push(x/100)});
+L.push(1000);
+const idxOf=p=>{let lo=0,hi=L.length-1;while(lo<hi){const m=(lo+hi)>>1;if(L[m]<p-1e-9)lo=m+1;else hi=m}return lo};
+const move=(p,n)=>L[Math.max(0,Math.min(L.length-1,idxOf(p)+n))];
+const fmt=p=>p.toFixed(2);
+const offTxt=n=>(n>0?'+'+n:String(n))+'t';
+const clock=()=>new Date().toTimeString().slice(0,8);
+
+/* ---------- state ---------- */
+const S={
+  market:'IND v AUS - 2nd T20I',
+  out:{india:{name:'India',on:true,i:idxOf(1.95)},aus:{name:'Australia',on:true,i:idxOf(2.04)}},
+  active:'india',mode:'manual',maxStake:50,
+  rule:{min:2.0,win:'Overs 15-20',cool:30,stake:10},
+  presets:[
+    {id:'dot',name:'Dot',side:'LAY',off:0,stake:10,on:true},
+    {id:'double',name:'Double',side:'BACK',off:1,stake:10,on:true},
+    {id:'wide',name:'Wide',side:'LAY',off:1,stake:5,on:true},
+    {id:'noball',name:'No Ball',side:'BACK',off:2,stake:5,on:true},
+    {id:'four',name:'Four',side:'BACK',off:1,stake:20,on:true},
+    {id:'six',name:'Six',side:'BACK',off:2,stake:20,on:true},
+    {id:'wicket',name:'Wicket',side:'LAY',off:3,stake:25,on:true},
+    {id:'single',name:'Single',side:'BACK',off:0,stake:10,on:false}
+  ],
+  log:[
+    {t:'03:41:07',src:'Phone',name:'Four',out:'India',side:'BACK',price:1.97,stake:20,st:'placed',id:'#4018'},
+    {t:'03:41:52',src:'Phone',name:'Dot',out:'Australia',side:'LAY',price:2.06,stake:10,st:'placed',id:'#4019'},
+    {t:'03:42:30',src:'Phone',name:'Wicket',out:'India',side:'LAY',price:2.02,stake:25,st:'rejected',note:'Price moved past the limit before sending. Nothing was placed.',id:'#4020'}
+  ],
+  filter:'all',lockUntil:0,coolUntil:0,seq:4020,token:60
+};
+const base={india:S.out.india.i,aus:S.out.aus.i};
+
+/* ---------- toast / modal ---------- */
+function toast(msg,kind=''){
+  const t=document.createElement('div');t.className='toast '+kind;t.textContent=msg;
+  const box=$('#toasts');box.appendChild(t);while(box.children.length>3)box.firstChild.remove();
+  setTimeout(()=>t.remove(),3600);
+}
+function openModal({title,body,ok,cancel,onOk}){
+  const root=$('#modalRoot');const prev=document.activeElement;
+  root.innerHTML=`<div class="modal" role="presentation"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt"><h3 id="dt"></h3><p></p><div class="row"><button class="btn ghost sm" data-m="no"></button><button class="btn primary sm" data-m="ok"></button></div></div></div>`;
+  $('#dt',root).textContent=title;$('.dlg p',root).textContent=body;
+  $('[data-m=no]',root).textContent=cancel;$('[data-m=ok]',root).textContent=ok;
+  const close=()=>{root.innerHTML='';document.removeEventListener('keydown',key);prev&&prev.focus&&prev.focus()};
+  const key=e=>{if(e.key==='Escape')close();if(e.key==='Tab'){const b=$$('button',root);const f=b[0],l=b[b.length-1];if(e.shiftKey&&document.activeElement===f){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f.focus()}}};
+  root.onclick=e=>{const m=e.target.closest('[data-m]');if(m){const yes=m.dataset.m==='ok';close();if(yes)onOk()}else if(e.target.classList.contains('modal'))close()};
+  document.addEventListener('keydown',key);$('[data-m=no]',root).focus();
+}
+
+/* ---------- custom select (no native picker) ---------- */
+function mkSelect(root,{label,options,get,set}){
+  root.innerHTML=`<button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="${label}"><span></span><svg viewBox="0 0 16 16"><path d="M3 6l5 5 5-5"/></svg></button><ul class="sel-pop" role="listbox" tabindex="-1" hidden></ul>`;
+  const btn=$('.sel-btn',root),val=$('span',btn),pop=$('.sel-pop',root);let act=0;
+  const draw=()=>{val.textContent=get();pop.innerHTML=options.map((o,i)=>`<li role="option" data-i="${i}" aria-selected="${o===get()}" class="${i===act?'act':''}">${o}</li>`).join('')};
+  const open=()=>{act=Math.max(0,options.indexOf(get()));draw();pop.hidden=false;btn.setAttribute('aria-expanded','true')};
+  const close=()=>{pop.hidden=true;btn.setAttribute('aria-expanded','false')};
+  const pick=i=>{set(options[i]);close();draw();btn.focus()};
+  btn.onclick=()=>pop.hidden?open():close();
+  btn.onkeydown=e=>{
+    if(pop.hidden){if(['ArrowDown','Enter',' '].includes(e.key)){e.preventDefault();open()}return}
+    if(e.key==='ArrowDown'){e.preventDefault();act=(act+1)%options.length;draw()}
+    else if(e.key==='ArrowUp'){e.preventDefault();act=(act-1+options.length)%options.length;draw()}
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(act)}
+    else if(e.key==='Escape'||e.key==='Tab')close();
+  };
+  pop.onclick=e=>{const li=e.target.closest('li');if(li)pick(+li.dataset.i)};
+  document.addEventListener('click',e=>{if(!root.contains(e.target))close()});
+  draw();return{draw};
+}
+
+/* ---------- betting logic ---------- */
+function addLog(r){S.log.unshift({t:clock(),src:'Phone',...r});renderLog();renderMini()}
+function fire(p,opts={}){
+  const now=performance.now();
+  if(now<S.lockUntil){
+    addLog({name:p.name,out:S.out[S.active].name,side:p.side,price:0,stake:p.stake,st:'blocked',note:'Duplicate tap inside the lock window. Ignored.',id:'-'});
+    toast('Duplicate tap blocked','warn');return;
+  }
+  if(p.stake>S.maxStake&&!opts.confirmed){
+    openModal({title:'Above your safety limit',body:`${p.name} uses a stake of ${POUND}${p.stake}. Your limit is ${POUND}${S.maxStake}. Send it anyway?`,ok:'Send anyway',cancel:'Cancel',onOk:()=>fire(p,{confirmed:true})});return;
+  }
+  const o=S.out[S.active];
+  const ref=p.side==='BACK'?L[o.i]:L[Math.min(o.i+1,L.length-1)];
+  const price=move(ref,p.off);
+  S.lockUntil=now+1200;lockUI(1200);
+  addLog({name:p.name,out:o.name,side:p.side,price,stake:p.stake,st:'placed',id:'#'+(++S.seq)});
+  toast(`Shabash! ${p.side} ${o.name} @ ${fmt(price)} (${offTxt(p.off)}), ${POUND}${p.stake} sent via API`,'');
+  fx(p.id);
+}
+function autoFire(){
+  const o=S.out[S.active];const price=L[o.i];
+  addLog({src:'Rule',name:'Odds '+fmt(S.rule.min)+'+',out:o.name,side:'BACK',price,stake:S.rule.stake,st:'placed',id:'#'+(++S.seq)});
+  toast(`Rule fired: BACK ${o.name} @ ${fmt(price)}, ${POUND}${S.rule.stake}. Cooldown ${S.rule.cool}s.`,'warn');
+}
+function lockUI(ms){
+  $('#pads').classList.add('locked');
+  const bar=$('#lockbar');
+  if(!reduce)bar.animate([{width:'100%'},{width:'0%'}],{duration:ms,easing:'linear'});
+  setTimeout(()=>$('#pads').classList.remove('locked'),ms);
+}
+function fx(id){
+  if(reduce)return;
+  if(id==='wicket'){const f=document.createElement('div');f.className='flash';document.body.appendChild(f);setTimeout(()=>f.remove(),800)}
+  if(!['four','six','wicket'].includes(id))return;
+  const ph=$('.phone').getBoundingClientRect(),b=$('#fb');
+  const x0=ph.left+ph.width/2-18,y0=ph.top+ph.height*0.55,x1=innerWidth+60;
+  const six=id==='six',h=six?Math.min(innerHeight*.55,380):id==='four'?34:90;
+  const dur=six?1300:id==='four'?750:1000,kf=[];
+  for(let k=0;k<=24;k++){const t=k/24;const y=y0-4*h*t*(1-t)+(id==='four'?t*60:0);
+    kf.push({transform:`translate(${x0+(x1-x0)*t}px,${y}px) rotate(${t*900}deg) scale(${1-t*.4})`,opacity:t>.92?(1-t)*12:1})}
+  b.animate(kf,{duration:dur,easing:'linear'});
+}
+
+/* ---------- render ---------- */
+function renderPhone(){
+  const en=Object.keys(S.out).filter(k=>S.out[k].on);
+  if(!S.out[S.active].on)S.active=en[0];
+  $('#outChips').innerHTML=en.map(k=>`<button class="chip ${k===S.active?'on':''}" data-act="out" data-o="${k}">${S.out[k].name}</button>`).join('');
+  $('#pads').innerHTML=S.presets.filter(p=>p.on).map(p=>`<button class="pad" data-act="pad" data-id="${p.id}"><b>${p.name}</b><span><i class="sd ${p.side}">${p.side}</i>${offTxt(p.off)} &middot; ${POUND}${p.stake}</span></button>`).join('');
+  const seg=m=>`<button class="${S.mode===m?'on':''}" data-act="mode" data-v="${m}">${m==='manual'?'Manual':'Rules'}</button>`;
+  $('#phoneMode').innerHTML=seg('manual')+seg('auto');
+  $('#deskMode').innerHTML=seg('manual')+seg('auto');
+  updateQuotes(true);renderMini();
+}
+function updateQuotes(first){
+  const o=S.out[S.active],b=L[o.i],l=L[Math.min(o.i+1,L.length-1)];
+  const qb=$('#qb'),ql=$('#ql'),old=+qb.textContent;
+  qb.textContent=fmt(b);ql.textContent=fmt(l);
+  if(!first&&b!==old){qb.className=b>old?'up':'dn';ql.className=qb.className;setTimeout(()=>{qb.className='';ql.className=''},520)}
+  const ar=$('#armed');
+  if(S.mode==='auto'){
+    const cd=Math.max(0,Math.ceil((S.coolUntil-performance.now())/1000));
+    ar.hidden=false;ar.textContent=`Rules armed: BACK ${o.name} when odds >= ${fmt(S.rule.min)} | ${S.rule.win} | `+(cd?`cooldown ${cd}s`:'ready');
+  }else ar.hidden=true;
+}
+function renderMini(){
+  $('#mini').innerHTML=S.log.slice(0,3).map(r=>`<div class="${r.st==='placed'?'p':r.st==='rejected'?'r':'k'}"><span>${r.t.slice(3)} ${r.name}</span><span>${r.st==='blocked'?'blocked':r.side+' '+fmt(r.price)}</span></div>`).join('');
+}
+function renderPresets(){
+  $('#plist').innerHTML=S.presets.map(p=>`<li class="prow ${p.on?'':'off'}" data-id="${p.id}">
+  <button class="sw" role="switch" aria-checked="${p.on}" aria-label="Enable ${p.name}" data-act="ptoggle"><i></i></button>
+  <span class="pname">${p.name}</span>
+  <div class="seg" role="group" aria-label="Side"><button class="${p.side==='BACK'?'on back':''}" data-act="pside" data-v="BACK">Back</button><button class="${p.side==='LAY'?'on lay':''}" data-act="pside" data-v="LAY">Lay</button></div>
+  <div class="step"><span class="lab">Offset</span><button data-act="pstep" data-f="off" data-d="-1" aria-label="Less offset">&minus;</button><output>${offTxt(p.off)}</output><button data-act="pstep" data-f="off" data-d="1" aria-label="More offset">+</button></div>
+  <div class="step"><span class="lab">Stake</span><button data-act="pstep" data-f="stake" data-d="-5" aria-label="Lower stake">&minus;</button><output>${POUND}${p.stake}</output><button data-act="pstep" data-f="stake" data-d="5" aria-label="Higher stake">+</button></div></li>`).join('');
+  $('#limOut').textContent=POUND+S.maxStake;
+}
+function renderOutcomes(){
+  $('#owrap').innerHTML=Object.keys(S.out).map(k=>`<div class="orow"><b>${S.out[k].name}</b><span style="color:var(--m);font:500 13px var(--f-mono)">back ${fmt(L[S.out[k].i])}</span><button class="sw" role="switch" aria-checked="${S.out[k].on}" aria-label="${S.out[k].name}" data-act="otoggle" data-o="${k}"><i></i></button></div>`).join('');
+}
+function renderRules(){
+  $('#rMin').textContent=fmt(S.rule.min);$('#rCool').textContent=S.rule.cool+'s';$('#rStake').textContent=POUND+S.rule.stake;
+}
+function renderLog(){
+  const rows=S.log.filter(r=>S.filter==='all'||r.st===S.filter);
+  const f=(k,t)=>`<button class="${S.filter===k?'on':''}" data-act="filter" data-v="${k}">${t}</button>`;
+  $('#filters').innerHTML=f('all','All')+f('placed','Placed')+f('rejected','Rejected')+f('blocked','Blocked');
+  $('#logCount').textContent=rows.length+' of '+S.log.length+' entries';
+  $('#lrows').innerHTML=rows.length?rows.map(r=>`<li class="lrow ${r.st}"><time>${r.t}</time><span class="who">${r.src}</span><span>${r.name} &middot; ${r.out}</span><span class="side-t ${r.side}">${r.side}</span><span class="px">${r.st==='blocked'?'-':fmt(r.price)}</span><span class="stk">${POUND}${r.stake}</span><span class="stat">${r.st}</span>${r.note?`<span class="note">${r.id} &middot; ${r.note}</span>`:''}</li>`).join(''):'<li class="empty">Nothing here yet. Tap a preset on the phone.</li>';
+}
+function renderAll(){renderPhone();renderPresets();renderOutcomes();renderRules();renderLog()}
+
+/* ---------- actions (one delegated handler) ---------- */
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');if(!a)return;
+  const act=a.dataset.act,row=a.closest('.prow'),p=row&&S.presets.find(x=>x.id===row.dataset.id);
+  if(act==='pad'){const pr=S.presets.find(x=>x.id===a.dataset.id);a.classList.add('hit');setTimeout(()=>a.classList.remove('hit'),520);fire(pr)}
+  else if(act==='out'){S.active=a.dataset.o;renderPhone()}
+  else if(act==='mode'){S.mode=a.dataset.v;if(S.mode==='auto')S.coolUntil=0;renderPhone();toast(S.mode==='auto'?'Rule-based mode on':'Manual mode on','warn')}
+  else if(act==='ptoggle'){p.on=!p.on;renderPresets();renderPhone()}
+  else if(act==='pside'){p.side=a.dataset.v;renderPresets();renderPhone()}
+  else if(act==='pstep'){const f=a.dataset.f,d=+a.dataset.d;p[f]=f==='off'?Math.max(-5,Math.min(10,p.off+d)):Math.max(5,Math.min(200,p.stake+d));renderPresets();renderPhone()}
+  else if(act==='lim'){S.maxStake=Math.max(5,Math.min(200,S.maxStake+ +a.dataset.d));$('#limOut').textContent=POUND+S.maxStake}
+  else if(act==='otoggle'){const o=S.out[a.dataset.o];const on=Object.values(S.out).filter(x=>x.on).length;if(o.on&&on===1){toast('Keep at least one outcome selected','warn');return}o.on=!o.on;renderOutcomes();renderPhone()}
+  else if(act==='rule'){const f=a.dataset.f,d=+a.dataset.d;if(f==='min')S.rule.min=move(S.rule.min,d);else if(f==='cool')S.rule.cool=Math.max(5,Math.min(120,S.rule.cool+d));else S.rule.stake=Math.max(5,Math.min(200,S.rule.stake+d));renderRules();updateQuotes(true)}
+  else if(act==='jump'){const o=S.out[S.active];o.i=Math.max(o.i,idxOf(S.rule.min)+1);updateQuotes();toast('Odds jumped to '+fmt(L[o.i]),'warn')}
+  else if(act==='filter'){S.filter=a.dataset.v;renderLog()}
+  else if(act==='tab'){$$('[data-act=tab]').forEach(b=>b.setAttribute('aria-selected',b===a));$$('[data-panel]').forEach(pn=>pn.hidden=pn.dataset.panel!==a.dataset.t)}
+});
+
+mkSelect($('#marketSel'),{label:'Market',options:['IND v AUS - 2nd T20I','ENG v NZ - 1st ODI','SA v PAK - 3rd T20I'],get:()=>S.market,set:v=>{S.market=v;toast('Market set: '+v)}});
+mkSelect($('#winSel'),{label:'Overs window',options:['Whole innings','Overs 1-6','Overs 15-20'],get:()=>S.rule.win,set:v=>{S.rule.win=v;updateQuotes(true)}});
+
+/* price walk + rule watcher + session timer */
+setInterval(()=>{
+  Object.keys(S.out).forEach(k=>{const o=S.out[k],r=Math.random();if(r<.3&&o.i>base[k]-6)o.i--;else if(r>.7&&o.i<base[k]+6)o.i++});
+  updateQuotes();renderOutcomes();
+  if(S.mode==='auto'){const o=S.out[S.active];if(L[o.i]>=S.rule.min&&performance.now()>S.coolUntil){S.coolUntil=performance.now()+S.rule.cool*1000;autoFire()}}
+},2200);
+setInterval(()=>{
+  S.token--;
+  if(S.token<=0){$('#sess').textContent='renewing...';S.token=60;toast('Session token renewed. No bet missed.','');return}
+  $('#sess').textContent='token 0:'+String(S.token).padStart(2,'0');
+  if(S.mode==='auto')updateQuotes(true);
+},1000);
+
+/* requirements checklist */
+const REQ=['The account holder\u2019s own Betfair account, App Key and certificate files (entered by them, never sent to me)','A small UK Linux server with Python and HTTPS','An Android phone with Chrome','Your button list: back or lay, offset ticks and stake','The funded stage one milestone and small test stakes'];
+const reqState=REQ.map(()=>false);
+function renderReq(){
+  $('#req').innerHTML=REQ.map((t,i)=>`<button class="rq" role="checkbox" aria-checked="${reqState[i]}" data-i="${i}"><i></i><span>${t}</span></button>`).join('');
+  $('#reqCount').textContent=reqState.filter(Boolean).length+' of '+REQ.length+' ready';
+}
+$('#req').addEventListener('click',e=>{const b=e.target.closest('.rq');if(!b)return;reqState[+b.dataset.i]=!reqState[+b.dataset.i];renderReq()});
+
+/* ---------- 3D scroll scene: phone -> UK server -> Betfair API gate ---------- */
+const world=$('#world'),cam=$('#cam');
+const FLOOR=170;
+const ST=[{x:-230,z:0},{x:190,z:-860},{x:-140,z:-1720}];
+function mkBox(w,h,d,front,sideCls=''){
+  const b=document.createElement('div');b.className='box';b.style.cssText=`width:${w}px;height:${h}px`;
+  const face=(fw,fh,tr,cls,html)=>`<div class="face ${cls}" style="width:${fw}px;height:${fh}px;left:${(w-fw)/2}px;top:${(h-fh)/2}px;transform:${tr}">${html||''}</div>`;
+  b.innerHTML=face(w,h,`translateZ(${d/2}px)`,'fr',front)
+    +face(w,h,`rotateY(180deg) translateZ(${d/2}px)`,'ba '+sideCls)
+    +face(d,h,`rotateY(90deg) translateZ(${w/2}px)`,'ri '+sideCls)
+    +face(d,h,`rotateY(-90deg) translateZ(${w/2}px)`,'le '+sideCls)
+    +face(w,d,`rotateX(90deg) translateZ(${h/2}px)`,'to '+sideCls)
+    +face(w,d,`rotateX(-90deg) translateZ(${h/2}px)`,'bo '+sideCls);
+  return b;
+}
+const place=(el,x,y,z)=>{el.style.transform=`translate3d(${x}px,${y}px,${z}px)`};
+
+/* floor, pitch, creases */
+const floor=document.createElement('div');floor.className='floor';
+floor.innerHTML='<div class="pitch"></div>'+ST.map(s=>`<div class="crease" style="top:${2400-s.z}px"></div>`).join('');
+world.appendChild(floor);
+
+/* station 1: phone slab */
+const st1=document.createElement('div');st1.className='st';
+const phoneBox=mkBox(160,300,18,`<div class="pf"><span class="nt"></span><div class="qq"><span class="b">1.95</span><span class="l">1.96</span></div><div class="bt">Dot<small>LAY 0t</small></div><div class="bt">Four<small>BACK +1t</small></div><div class="bt hot">Six<small>BACK +2t &middot; 20</small></div><div class="bt">Wicket<small>LAY +3t</small></div><span class="finger"></span></div>`,'');
+phoneBox.querySelectorAll('.face:not(.fr)').forEach(f=>f.style.background='#dfe5f5');
+phoneBox.style.transform='rotateY(-16deg)';
+st1.appendChild(phoneBox);
+const tag1=document.createElement('div');tag1.className='tag';tag1.innerHTML='1<small>TAP</small>';tag1.style.cssText='left:60px;top:-96px';st1.appendChild(tag1);
+place(st1,ST[0].x-80,FLOOR-300,ST[0].z);world.appendChild(st1);
+
+/* station 2: UK server rack */
+const st2=document.createElement('div');st2.className='st';
+const rack=mkBox(190,260,130,`<div class="rack"><h4>UK SERVER</h4><div class="row"><i class="led"></i><span>price 1.97 +2t = 1.99</span></div><div class="row"><i class="led"></i><span>stake 20 within limit 50</span></div><div class="row"><i class="led"></i><span>lock free, token ok</span></div></div>`,'vent');
+rack.style.transform='rotateY(14deg)';
+st2.appendChild(rack);
+const tag2=document.createElement('div');tag2.className='tag';tag2.innerHTML='2<small>CHECK</small>';tag2.style.cssText='left:70px;top:-96px';st2.appendChild(tag2);
+place(st2,ST[1].x-95,FLOOR-260,ST[1].z);world.appendChild(st2);
+
+/* station 3: arched gate (stacked plates give depth) */
+const st3=document.createElement('div');st3.className='st';
+st3.style.width='300px';st3.style.height='330px';
+let plates='';
+for(let k=5;k>=0;k--){plates+=`<div class="gate-plate ${k===0?'gate-front':''}" style="transform:translateZ(${-k*9}px);background:${k===0?'':`hsl(222 30% ${95-k*5}%)`};${k===0?'':'border-color:#e5a23a'}">${k===0?'<b>BETFAIR API</b><small>placeOrders</small>':''}</div>`}
+st3.innerHTML=plates;
+const tag3=document.createElement('div');tag3.className='tag';tag3.innerHTML='3<small>PLACE</small>';tag3.style.cssText='left:115px;top:-96px';st3.appendChild(tag3);
+const stamp3=document.createElement('div');stamp3.className='placed3';stamp3.textContent='PLACED';stamp3.style.cssText+=';left:80px;top:150px;transform-origin:center';st3.appendChild(stamp3);
+place(st3,ST[2].x-150,FLOOR-330,ST[2].z);world.appendChild(st3);
+const stations=[st1,st2,st3];
+
+/* rail of dots on the floor, ball with shadow */
+const NDOT=64,dots=[];
+const lerp=(a,b,t)=>a+(b-a)*t;
+function pathAt(s){const i=Math.max(0,Math.min(1,Math.floor(s))),t=Math.max(0,Math.min(1,s-i)),a=ST[i],b=ST[i+1]||ST[i];return{x:lerp(a.x,b.x,t),z:lerp(a.z,b.z,t)}}
+for(let i=0;i<=NDOT;i++){
+  const s=i/NDOT*2,pt=pathAt(s>=2?1.999:s),d=document.createElement('div');d.className='dot3';
+  d.style.transform=`translate3d(${pt.x}px,${FLOOR-1}px,${pt.z+20}px) rotateX(90deg)`;world.appendChild(d);dots.push({el:d,s});
+}
+const shadow=document.createElement('div');shadow.className='pshadow';world.appendChild(shadow);
+const ball=document.createElement('div');ball.className='packet';ball.innerHTML=BALL();world.appendChild(ball);
+
+/* camera path: dwell on each station, glide between them */
+const SEG=[[0,.13,0,0],[.13,.40,0,1],[.40,.58,1,1],[.58,.86,1,2],[.86,1,2,2]];
+function fOf(p){for(const[a,b,u,v]of SEG){if(p<=b){const t=Math.max(0,(p-a)/(b-a)),e=t*t*(3-2*t);return u+(v-u)*e}}return 2}
+let px=0,py=0,lastP=-1;
+function sceneUpdate(p){
+  lastP=p;
+  const vw=innerWidth,vh=innerHeight,k=Math.max(.62,Math.min(1,vw/1150,vh/780));
+  const f=fOf(p),g=fOf(Math.min(1,p+.075)),c=pathAt(f);
+  cam.style.transform=`scale(${k}) rotateX(${15+py*3}deg) rotateY(${(Math.sin(f*Math.PI)*-7)+px*5}deg)`;
+  world.style.transform=`translate3d(${-c.x}px,0,${-c.z}px)`;
+  const bp=pathAt(g),fr=g%1,mv=(fr>.001&&fr<.999&&g<2)?Math.abs(Math.sin(fr*Math.PI*3))*80:0;
+  const bz=bp.z+60;
+  ball.style.transform=`translate3d(${bp.x}px,${FLOOR-18-mv}px,${bz}px) rotate(${g*540}deg)`;
+  shadow.style.transform=`translate3d(${bp.x}px,${FLOOR-1}px,${bz}px) rotateX(90deg) scale(${1-mv/220})`;
+  dots.forEach(d=>d.el.classList.toggle('lit',d.s<=g+.02));
+  const act=Math.round(f);
+  stations.forEach((s,i)=>s.classList.toggle('on',i===act&&Math.abs(f-act)<.45));
+  stamp3.classList.toggle('show',g>1.94&&f>1.7);
+  $$('#steps li').forEach((li,i)=>li.classList.toggle('on',i===act));
+  $('#hint').style.opacity=p<.04?1:0;
+}
+
+/* ---------- motion: spotlight, ring cursor, tilt, magnet ---------- */
+let mx=innerWidth*.7,my=innerHeight*.2,raf=0;
+const spot=$('.spot'),ring=$('.ring');
+document.addEventListener('pointermove',e=>{
+  mx=e.clientX;my=e.clientY;
+  if(!raf)raf=requestAnimationFrame(()=>{raf=0;spot.style.setProperty('--mx',mx+'px');spot.style.setProperty('--my',my+'px');if(fine){ring.style.transform=`translate(${mx}px,${my}px)`;ring.classList.add('on');ring.classList.toggle('big',!!e.target.closest('button,a,.pad'))}
+    px=(mx/innerWidth-.5)*2;py=(my/innerHeight-.5)*2;if(!reduce&&lastP>=0&&fine)sceneUpdate(lastP)});
+  if(!fine||reduce)return;
+  const m=e.target.closest('.mag');
+  if(m){const r=m.getBoundingClientRect();m.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.18}px,${(e.clientY-r.top-r.height/2)*.28}px)`}
+  $$('.mag').forEach(x=>{if(x!==m)x.style.transform=''});
+});
+if(fine&&!reduce){
+  $$('[data-tilt]').forEach(t=>{
+    const max=+t.dataset.tilt;
+    t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;t.style.transform=`rotateY(${x*max*2}deg) rotateX(${-y*max*2}deg)`});
+    t.addEventListener('pointerleave',()=>{t.style.transform=''});
+  });
+}
+
+/* ---------- scroll: progress, reveal, scene ---------- */
+const bar=$('#bar'),how=$('#how');
+function onScroll(){
+  const h=document.documentElement;
+  bar.style.width=(scrollY/(h.scrollHeight-innerHeight||1)*100)+'%';
+  const p=Math.max(0,Math.min(1,(scrollY-how.offsetTop)/(how.offsetHeight-innerHeight)));
+  sceneUpdate(p);
+}
+addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);
+const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.12});
+$$('.rv').forEach(el=>io.observe(el));
+
+renderAll();renderReq();onScroll();
+window.TT={scene:sceneUpdate};
+})();
+</script>
+</body>
+</html>
