@@ -76,10 +76,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(16,20,38,.1) 1.2px,transparent 1.5px) 0 0/28px 28px;-webkit-mask-image:linear-gradient(110deg,#000,transparent 55%);mask-image:linear-gradient(110deg,#000,transparent 55%)}
 .hero{flex-direction:column;justify-content:center;gap:54px}
 .hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:40px;align-items:center;position:relative;z-index:2}
-.herobg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;filter:blur(2px) saturate(1.05);transform:scale(1.04);z-index:0;pointer-events:none}
-.herofade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.93) 36%,rgba(255,255,255,.28) 100%),linear-gradient(#fff 0%,rgba(255,255,255,0) 22%,rgba(255,255,255,0) 72%,#fff 100%)}
+.herobg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.95;filter:saturate(1.1);transform:scale(1.03);z-index:0;pointer-events:none}
+.herofade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.95) 32%,rgba(255,255,255,.62) 58%,rgba(255,255,255,.16) 100%),linear-gradient(#fff 0%,rgba(255,255,255,0) 16%,rgba(255,255,255,0) 80%,#fff 100%)}
 .reel{position:relative;z-index:2;width:100%;overflow:hidden;padding:6px 0 14px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
-.reel-track{display:flex;gap:16px;width:max-content;animation:flow 80s linear infinite}
+.reel-track{display:flex;gap:16px;width:max-content;animation:flow 120s linear infinite}
 .reel:hover .reel-track{animation-play-state:paused}
 @keyframes flow{to{transform:translateX(calc(-50% - 8px))}}
 .rcard{position:relative;flex:none;height:220px;margin:0;border-radius:24px;overflow:hidden;background:#dfe6f5;border:1px solid #fff;box-shadow:0 2px 4px rgba(16,20,38,.06),0 22px 40px -22px rgba(16,20,38,.42)}
@@ -346,6 +346,7 @@ html.nomotion .reel-track{animation:none!important}
 .count{font:700 14px var(--f-mono);color:var(--orange);margin-top:16px}
 footer{position:relative;z-index:1;background:var(--bg1);border-top:1px solid var(--line);color:var(--ink2);padding:40px 0 60px;font-size:14px}
 footer p{max-width:80ch}
+footer .credits{margin-top:10px;font-size:12.5px;opacity:.8}
 footer .brand{margin-bottom:12px;color:var(--ink)}
 
 /* overlays */
@@ -664,7 +665,7 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 </main>
 
 <footer>
-  <div class="wrap"><div class="brand"><span class="b" data-ball></span>TickTap</div><p>Demo build with simulated prices and bets. It is not connected to Betfair or any bookmaker. No profit is promised. The account holder is responsible for following Betfair&rsquo;s terms and local law, and for keeping their own keys and login private.</p><button class="mot" id="motion" type="button" aria-label="Switch page motion on or off"></button></div>
+  <div class="wrap"><div class="brand"><span class="b" data-ball></span>TickTap</div><p>Demo build with simulated prices and bets. It is not connected to Betfair or any bookmaker. No profit is promised. The account holder is responsible for following Betfair&rsquo;s terms and local law, and for keeping their own keys and login private.</p><p class="credits">Media credits: Wankhede Stadium match, Eden Gardens and the cricket ball photo (public domain, Wikimedia Commons); Headingley match (CC0, PookieFugglestein); cricket pitch at MVGR (CC BY 4.0, Saiphani02); drone and floodlit match videos from Pexels (Pexels License). The phone, server, gate and settings clips are recorded from this demo.</p><button class="mot" id="motion" type="button" aria-label="Switch page motion on or off"></button></div>
 </footer>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -1072,7 +1073,7 @@ put(stand,-2600,FLOOR-250,-3020);
 })();
 </script>
 <script>
-/*ASSETS*/window.TT_ASSETS={flow:'assets/flow.mp4',phone:'assets/phone.mp4',settings:'assets/settings.mp4',flow_poster:'assets/flow_poster.jpg',phone_poster:'assets/phone_poster.jpg',settings_poster:'assets/settings_poster.jpg',g_server:'assets/g_server.jpg',g_placed:'assets/g_placed.jpg',g_ground:'assets/g_ground.jpg',g_phone:'assets/g_phone.jpg',g_log:'assets/g_log.jpg'};/*END*/
+/*ASSETS*/window.TT_ASSETS={flow:'assets/flow.mp4',phone:'assets/phone.mp4',settings:'assets/settings.mp4',drone:'assets/drone.mp4',night:'assets/night.mp4',flow_poster:'assets/flow_poster.jpg',phone_poster:'assets/phone_poster.jpg',settings_poster:'assets/settings_poster.jpg',drone_poster:'assets/drone_poster.jpg',night_poster:'assets/night_poster.jpg',g_server:'assets/g_server.jpg',g_placed:'assets/g_placed.jpg',g_ground:'assets/g_ground.jpg',g_phone:'assets/g_phone.jpg',g_log:'assets/g_log.jpg',p_wankhede:'assets/p_wankhede.jpg',p_eden:'assets/p_eden.jpg',p_ball:'assets/p_ball.jpg',p_leeds:'assets/p_leeds.jpg',p_mvgr:'assets/p_mvgr.jpg'};/*END*/
 </script>
 <script>
 /* hero: looping background video and an auto-flowing reel of clips and stills */
@@ -1080,7 +1081,7 @@ put(stand,-2600,FLOOR-250,-3020);
 'use strict';
 const A=window.TT_ASSETS||{};
 const reduce=document.documentElement.classList.contains('nomotion');
-const items=[['v','phone','Tap a preset',560/648],['i','g_server','Server check',16/9],['v','flow','Live ground',16/9],['i','g_log','Bet log',2.2],['v','settings','Settings in motion',960/584],['i','g_placed','Bet placed',16/9],['i','g_phone','Phone controller',440/830],['i','g_ground','Ground view',16/9]];
+const items=[['v','phone','Tap a preset',560/648],['i','p_wankhede','Wankhede, Mumbai',4/3],['i','g_server','Server check',16/9],['v','night','Floodlit match',16/9],['i','p_ball','Cricket ball',1830/1530],['v','flow','Live ground',16/9],['i','p_eden','Eden Gardens',1920/1537],['i','g_log','Bet log',2.2],['v','settings','Settings in motion',960/584],['i','p_leeds','Match day',4/3],['i','g_placed','Bet placed',16/9],['i','p_mvgr','The pitch',3/4],['i','g_phone','Phone controller',440/830]];
 function card(it){
   const k=it[0],name=it[1],label=it[2],ar=it[3];
   const f=document.createElement('figure');f.className='rcard';f.style.aspectRatio=String(ar);
@@ -1098,7 +1099,7 @@ function card(it){
 const track=document.getElementById('reelTrack');
 if(track){items.concat(items).forEach(it=>track.appendChild(card(it)))}
 const bg=document.getElementById('heroBg');
-if(bg&&A.flow){bg.src=A.flow;if(A.flow_poster)bg.poster=A.flow_poster;if(reduce)bg.removeAttribute('autoplay')}
+if(bg&&A.drone){bg.src=A.drone;if(A.drone_poster)bg.poster=A.drone_poster;if(reduce)bg.removeAttribute('autoplay')}
 const ctl=document.getElementById('reelCtl'),reel=document.getElementById('reel');
 let manual=false;
 const heroVideos=()=>document.querySelectorAll('.hero video');
@@ -1136,6 +1137,7 @@ const D={
  'Tap a preset on your Android phone. A small service places a back or lay a few ticks off the live price, straight through the Betfair API. Change stakes and outcomes from any desktop browser. No hotkeys, no ladder clicks.':'अपने Android फ़ोन पर प्रीसेट टैप करें। एक छोटी सर्विस लाइव भाव से कुछ टिक ऊपर या नीचे बैक या लेय दांव लगाती है, सीधे Betfair API के ज़रिये। स्टेक और आउटकम किसी भी डेस्कटॉप ब्राउज़र से बदलें। न कोई हॉटकी, न लैडर पर क्लिक।',
  'Try the phone \u2193':'फ़ोन आज़माएँ \u2193','Scope and timeline':'दायरा और समय-सीमा',
  'web panel,':'वेब पैनल,','two views':'दो रूप','7 days':'7 दिन','to stage one':'चरण एक तक','after funding':'फंडिंग के बाद','hotkeys.':'हॉटकी।','API only.':'सिर्फ़ API।',
+ 'Wankhede, Mumbai':'वानखेड़े, मुंबई','Floodlit match':'फ़्लडलाइट में मैच','Cricket ball':'क्रिकेट की गेंद','Eden Gardens':'ईडन गार्डन्स','Match day':'मैच का दिन','The pitch':'पिच',
  'Pause':'रोकें','Play':'चलाएँ','Tap a preset':'प्रीसेट टैप करें','Live ground':'लाइव मैदान','Settings in motion':'सेटिंग्स चलते हुए','Server check':'सर्वर जाँच','Phone controller':'फ़ोन कंट्रोलर','Ground view':'मैदान का नज़ारा',
  'Token renewed':'टोकन नवीनीकृत','Offset':'ऑफ़सेट','+2 ticks':'+2 टिक','Bet placed':'दांव लगा',
  'LIVE':'लाइव','Mode':'मोड','Manual':'मैन्युअल','Rules':'नियम',
