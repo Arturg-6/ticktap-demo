@@ -469,6 +469,32 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 .packet svg{filter:none}
 .tag{text-shadow:none}
 .packet{width:40px;height:40px;margin:-20px 0 0 -20px}.pshadow{width:40px;height:40px;margin:-20px 0 0 -20px}
+
+/* section media cards, matching the hero */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.92fr);gap:56px;align-items:center;margin-bottom:46px}
+.split .sp-text h2{max-width:16ch}
+.media{position:relative;margin:0;border-radius:32px;overflow:hidden;background:#dfe6f5;border:1px solid #fff;box-shadow:0 2px 4px rgba(16,20,38,.05),0 34px 60px -28px rgba(16,20,38,.5);aspect-ratio:var(--ar,16/10);transform-style:preserve-3d;transition:transform .15s ease-out}
+.media video,.media img{display:block;width:100%;height:100%;object-fit:cover}
+.media img{animation:kb 22s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.08) translate(-1.5%,-1%)}}
+html.nomotion .media img{animation:none}
+.media::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 58%,rgba(16,20,38,.3));pointer-events:none}
+.media figcaption{position:absolute;left:16px;bottom:16px;z-index:2;padding:7px 14px;border-radius:99px;background:rgba(255,255,255,.94);font:700 13px var(--f-body);color:var(--ink);box-shadow:var(--sh1)}
+.mchip{position:absolute;z-index:2;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:16px;background:rgba(255,255,255,.94);border:1px solid var(--line);box-shadow:var(--sh1);font:700 13px var(--f-body);color:var(--ink);white-space:nowrap;animation:bob 5s ease-in-out infinite}
+.mchip::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(18,183,106,.18)}
+.mchip:nth-of-type(1){left:16px;top:16px}.mchip:nth-of-type(2){right:16px;top:70px;animation-delay:-1.6s}.mchip:nth-of-type(3){right:16px;bottom:16px;animation-delay:-3s}
+.cta-band{position:relative;z-index:1;padding:0 0 clamp(60px,8vw,100px)}
+.cta-card{position:relative;border-radius:40px;overflow:hidden;color:#fff;padding:clamp(36px,6vw,80px);min-height:340px;display:grid;align-content:center;gap:16px;background:#101426}
+.cta-card .bgmedia{position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;aspect-ratio:auto;opacity:.6}
+.cta-card .bgmedia::after,.cta-card .bgmedia figcaption{display:none}
+.cta-card::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(16,20,38,.93),rgba(16,20,38,.6) 56%,rgba(255,122,26,.38))}
+.cta-card>*:not(.bgmedia){position:relative;z-index:2}
+.cta-card h2{font-size:clamp(32px,5vw,58px);max-width:14ch;color:#fff;margin:0}
+.cta-card p{max-width:48ch;color:rgba(255,255,255,.86)}
+.cta-card .cta{margin:10px 0 0}
+.cta-card .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4);box-shadow:none}
+#views .media{max-width:440px;justify-self:end}
+@media (max-width:900px){#views .media{justify-self:center;width:100%}.split{grid-template-columns:minmax(0,1fr);gap:28px}.media{border-radius:26px}.cta-card{border-radius:30px}}
 </style>
 </head>
 <body>
@@ -557,11 +583,11 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 
 <section class="sec alt views" id="views">
   <div class="wrap">
-    <div class="rv">
+    <div class="split rv"><div class="sp-text">
       <p class="eyebrow">02 / two views, one panel <span class="dv">&#2342;&#2379; &#2352;&#2370;&#2346;, &#2319;&#2325; &#2346;&#2376;&#2344;&#2354;</span></p>
       <h2>Settings on the desktop. Triggers on the phone.</h2>
       <p class="lede">The desktop view has no fire buttons, only settings. Change something here and the phone above updates at once. Try it: switch an outcome off, or change an offset, then look at the phone.</p>
-    </div>
+    </div><figure class="media" data-tilt="3" data-media="v|phone|Tap a preset|0.864"></figure></div>
     <div class="win dk rv" data-tilt="2.5">
       <div class="win-bar"><i></i><i></i><i></i><span class="url">your-server.example/settings</span></div>
       <div class="win-body">
@@ -602,11 +628,11 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 
 <section class="sec" id="safety">
   <div class="wrap">
-    <div class="rv">
+    <div class="split rv"><div class="sp-text">
       <p class="eyebrow">03 / built not to miss, not to double <span class="dv">&#2360;&#2369;&#2352;&#2325;&#2381;&#2359;&#2366;</span></p>
       <h2>Boring on purpose. That is the point.</h2>
       <p class="lede">Real money needs plain, careful code. These checks run on every bet. Nobody can promise perfect uptime or profit, so the service reports honestly what happened.</p>
-    </div>
+    </div><figure class="media" data-tilt="3" data-media="v|night|Floodlit match|1.5" data-chips="Token renewed|Duplicate blocked|Price checked"></figure></div>
     <div class="safe-grid dk">
       <article class="sc rv"><div class="band"></div><div class="viz"><svg viewBox="0 0 60 60"><circle class="t" cx="30" cy="30" r="25"/><circle class="f" cx="30" cy="30" r="25"/></svg></div><h3>Session renewal</h3><p>The login token is renewed before it runs out, and the retry is logged.</p></article>
       <article class="sc rv"><div class="band"></div><div class="viz"><div class="taps"><span>tap</span><span>tap</span></div></div><h3>Duplicate lock</h3><p>A second tap or repeated poll inside the lock window is ignored and logged.</p></article>
@@ -618,11 +644,11 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 
 <section class="sec alt" id="log">
   <div class="wrap">
-    <div class="rv">
+    <div class="split rv"><div class="sp-text">
       <p class="eyebrow">04 / the bet log <span class="dv">&#2361;&#2367;&#2360;&#2366;&#2348;-&#2325;&#2367;&#2340;&#2366;&#2348;</span></p>
       <h2>Every tap leaves a line.</h2>
       <p class="lede">Tap presets on the phone and watch this list fill in. Tap twice quickly to see the duplicate lock log a blocked request.</p>
-    </div>
+    </div><figure class="media" data-tilt="3" data-media="i|p_wankhede|Wankhede, Mumbai|1.33" data-chips="Every tap logged"></figure></div>
     <div class="logbox dk rv">
       <div class="logtop"><span class="ttl">BET LOG</span><div class="seg" id="filters"></div><span id="logCount" style="font:500 12px var(--f-mono);color:var(--m)"></span></div>
       <ul class="lrows" id="lrows"></ul>
@@ -632,10 +658,10 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 
 <section class="sec" id="scope">
   <div class="wrap">
-    <div class="rv">
+    <div class="split rv"><div class="sp-text">
       <p class="eyebrow">05 / scope and timeline <span class="dv">&#2342;&#2366;&#2351;&#2352;&#2366;</span></p>
       <h2>What you get. What stays out.</h2>
-    </div>
+    </div><figure class="media" data-tilt="3" data-media="i|p_eden|Eden Gardens|1.25"></figure></div>
     <div class="two">
       <div class="box2 yes rv"><span class="stp">IN</span><h3>In this project</h3><ul>
         <li>Betfair login with automatic session renewal</li>
@@ -662,6 +688,11 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
     <p class="count" id="reqCount"></p>
   </div>
 </section>
+<section class="cta-band"><div class="wrap"><div class="cta-card rv"><figure class="media bgmedia" data-media="i|p_ball|Cricket ball|1.2" aria-hidden="true"></figure>
+  <h2>Ready for stage one?</h2>
+  <p>Login, offset bets, both views and the bet log. Work starts once the stage one milestone is funded.</p>
+  <div class="cta"><a class="btn primary mag" href="#stage">Back to the phone &uarr;</a><a class="btn ghost mag" href="#scope">Scope and timeline</a></div>
+</div></div></section>
 </main>
 
 <footer>
@@ -1125,6 +1156,31 @@ if(mot){
 })();
 </script>
 <script>
+/* section media cards: clip or photo, caption, floating chips */
+(()=>{
+'use strict';
+const A=window.TT_ASSETS||{};
+const reduce=document.documentElement.classList.contains('nomotion');
+const vids=[];
+document.querySelectorAll('figure.media[data-media]').forEach(f=>{
+  const p=f.dataset.media.split('|'),k=p[0],name=p[1],label=p[2],ar=p[3];
+  f.style.setProperty('--ar',ar);
+  if(k==='v'){
+    const v=document.createElement('video');v.muted=true;v.loop=true;v.playsInline=true;v.preload='auto';v.autoplay=!reduce;
+    v.setAttribute('muted','');v.setAttribute('playsinline','');v.setAttribute('aria-hidden','true');
+    if(A[name+'_poster'])v.poster=A[name+'_poster'];
+    v.src=A[name];f.appendChild(v);vids.push(v);
+  }else{const i=new Image();i.alt=label;i.src=A[name];f.appendChild(i)}
+  if(!f.classList.contains('bgmedia')){const c=document.createElement('figcaption');c.textContent=label;f.appendChild(c)}
+  if(f.dataset.chips)f.dataset.chips.split('|').forEach(t=>{const m=document.createElement('div');m.className='mchip';m.textContent=t;f.appendChild(m)});
+});
+if(!reduce&&'IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(e.isIntersecting){const r=v.play&&v.play();if(r&&r.catch)r.catch(()=>{})}else if(v.pause)v.pause()}),{threshold:.15});
+  vids.forEach(v=>io.observe(v));
+}
+})();
+</script>
+<script>
 /* English / Hindi switch: swaps text nodes through a dictionary, and keeps translating what the demo renders later */
 (()=>{
 'use strict';
@@ -1138,6 +1194,8 @@ const D={
  'Try the phone \u2193':'फ़ोन आज़माएँ \u2193','Scope and timeline':'दायरा और समय-सीमा',
  'web panel,':'वेब पैनल,','two views':'दो रूप','7 days':'7 दिन','to stage one':'चरण एक तक','after funding':'फंडिंग के बाद','hotkeys.':'हॉटकी।','API only.':'सिर्फ़ API।',
  'Wankhede, Mumbai':'वानखेड़े, मुंबई','Floodlit match':'फ़्लडलाइट में मैच','Cricket ball':'क्रिकेट की गेंद','Eden Gardens':'ईडन गार्डन्स','Match day':'मैच का दिन','The pitch':'पिच',
+ 'Duplicate blocked':'डुप्लिकेट रोका गया','Price checked':'भाव जाँचा गया','Every tap logged':'हर टैप दर्ज','Ready for stage one?':'चरण एक के लिए तैयार?',
+ 'Login, offset bets, both views and the bet log. Work starts once the stage one milestone is funded.':'लॉगिन, ऑफ़सेट दांव, दोनों व्यू और बेट लॉग। चरण एक का मील-स्टोन फंड होते ही काम शुरू होता है।','Back to the phone ↑':'फ़ोन पर वापस ↑',
  'Pause':'रोकें','Play':'चलाएँ','Tap a preset':'प्रीसेट टैप करें','Live ground':'लाइव मैदान','Settings in motion':'सेटिंग्स चलते हुए','Server check':'सर्वर जाँच','Phone controller':'फ़ोन कंट्रोलर','Ground view':'मैदान का नज़ारा',
  'Token renewed':'टोकन नवीनीकृत','Offset':'ऑफ़सेट','+2 ticks':'+2 टिक','Bet placed':'दांव लगा',
  'LIVE':'लाइव','Mode':'मोड','Manual':'मैन्युअल','Rules':'नियम',
