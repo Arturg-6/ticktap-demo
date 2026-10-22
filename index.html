@@ -74,7 +74,23 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hero{position:relative;z-index:1;min-height:100svh;padding:130px 0 80px;display:flex;align-items:center;overflow:hidden;
   background:radial-gradient(720px 520px at 88% 8%,rgba(255,176,46,.34),transparent 62%),radial-gradient(620px 520px at 2% 100%,rgba(59,91,255,.13),transparent 62%),linear-gradient(#fff,#fffaf4)}
 .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(16,20,38,.1) 1.2px,transparent 1.5px) 0 0/28px 28px;-webkit-mask-image:linear-gradient(110deg,#000,transparent 55%);mask-image:linear-gradient(110deg,#000,transparent 55%)}
-.hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:40px;align-items:center;position:relative}
+.hero{flex-direction:column;justify-content:center;gap:54px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:40px;align-items:center;position:relative;z-index:2}
+.herobg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;filter:blur(2px) saturate(1.05);transform:scale(1.04);z-index:0;pointer-events:none}
+.herofade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.93) 36%,rgba(255,255,255,.28) 100%),linear-gradient(#fff 0%,rgba(255,255,255,0) 22%,rgba(255,255,255,0) 72%,#fff 100%)}
+.reel{position:relative;z-index:2;width:100%;overflow:hidden;padding:6px 0 14px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.reel-track{display:flex;gap:16px;width:max-content;animation:flow 80s linear infinite}
+.reel:hover .reel-track{animation-play-state:paused}
+@keyframes flow{to{transform:translateX(calc(-50% - 8px))}}
+.rcard{position:relative;flex:none;height:220px;margin:0;border-radius:24px;overflow:hidden;background:#dfe6f5;border:1px solid #fff;box-shadow:0 2px 4px rgba(16,20,38,.06),0 22px 40px -22px rgba(16,20,38,.42)}
+.rcard video,.rcard img{display:block;width:100%;height:100%;object-fit:cover}
+.rcard figcaption{position:absolute;left:12px;bottom:12px;padding:6px 13px;border-radius:99px;background:rgba(255,255,255,.93);font:700 12.5px var(--f-body);color:var(--ink);box-shadow:var(--sh1)}
+@media (max-width:820px){.rcard{height:170px;border-radius:20px}.herobg{opacity:.4}}
+html.nomotion .reel-track{animation:none!important}
+.reel.paused .reel-track{animation-play-state:paused}
+.reelctl{position:absolute;top:16px;right:92px;z-index:3;padding:7px 14px;border-radius:99px;background:rgba(255,255,255,.93);border:1px solid var(--line);box-shadow:var(--sh1);font:700 12.5px var(--f-body);color:var(--ink)}
+.reelctl:hover{background:#fff}
+.mot{margin-top:14px;padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;font:700 12.5px var(--f-body);color:var(--ink2)}
 .hero h1{font-size:clamp(42px,5.8vw,80px);margin:22px 0 20px}
 .hero h1 .sub{display:block;font:600 clamp(18px,2vw,24px)/1.3 var(--f-body);letter-spacing:-.01em;color:var(--mute);margin-top:16px}
 .cta{display:flex;flex-wrap:wrap;gap:14px;margin:30px 0 38px}
@@ -383,10 +399,8 @@ footer .brand{margin-bottom:12px;color:var(--ink)}
   .chipf.c1{top:-14px;left:6px}.chipf.c2{top:auto;bottom:-12px;right:6px}.chipf.c3{display:none}
   .hero{padding-top:110px}
 }
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
-  .rv{opacity:1;transform:none}
-}
+html.nomotion *,html.nomotion *::before,html.nomotion *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+html.nomotion .rv{opacity:1;transform:none}
 
 /* ---- language switch ---- */
 .topr{display:flex;align-items:center;gap:10px}
@@ -448,13 +462,16 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 .gate-front::before{background:radial-gradient(circle at 50% 90%,#ffd98a,#7a5a2a 70%,#2b1f10)!important;border-color:#c79a3b!important;box-shadow:inset 0 0 30px rgba(0,0,0,.55)}
 .gate-front b{color:#fff!important;text-shadow:0 2px 4px rgba(0,0,0,.6);letter-spacing:.02em!important}
 .gate-front small{color:#ffe4a6!important}
-.packet{filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}
+.board{position:absolute;left:0;top:0;background:repeating-linear-gradient(90deg,#1f4fd8 0 120px,#fff 120px 140px,#e8590c 140px 260px,#fff 260px 280px,#12805c 280px 400px,#fff 400px 420px);border-top:4px solid #fff;opacity:.95}
+.sight{position:absolute;left:0;top:0;background:linear-gradient(#fdfdfd,#e6e9ef);box-shadow:0 12px 0 -4px rgba(0,0,0,.12),inset 0 0 0 4px #cfd5e2;opacity:.96}
+.sight::after{content:"";position:absolute;left:8%;right:8%;bottom:-70px;height:70px;background:linear-gradient(90deg,#8e97ad 0 6px,transparent 6px calc(100% - 6px),#8e97ad calc(100% - 6px))}
+.packet svg{filter:none}
 .tag{text-shadow:none}
 .packet{width:40px;height:40px;margin:-20px 0 0 -20px}.pshadow{width:40px;height:40px;margin:-20px 0 0 -20px}
 </style>
 </head>
 <body>
-<script>document.documentElement.classList.add('js')</script>
+<script>document.documentElement.classList.add('js');try{if(localStorage.getItem('tt-motion')==='off')document.documentElement.classList.add('nomotion')}catch(e){}</script>
 <div class="spot" aria-hidden="true"></div>
 <div class="ring" aria-hidden="true"></div>
 <div class="progress" aria-hidden="true"><i id="bar"></i></div>
@@ -468,6 +485,8 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 
 <main id="top">
 <section class="hero">
+  <video class="herobg" id="heroBg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+  <div class="herofade" aria-hidden="true"></div>
   <div class="wrap">
     <div class="hero-copy">
       <p class="eyebrow rv">Offset bet controller &middot; working demo <span class="dv">&#2330;&#2354;&#2379;, &#2358;&#2369;&#2352;&#2370; &#2325;&#2352;&#2375;&#2306;</span></p>
@@ -512,6 +531,7 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
       </div>
     </div>
   </div>
+  <div class="reel" id="reel" aria-label="Product reel"><button class="reelctl" id="reelCtl" type="button" aria-pressed="false">Pause</button><div class="reel-track" id="reelTrack"></div></div>
 </section>
 
 <section class="how" id="how">
@@ -644,7 +664,7 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 </main>
 
 <footer>
-  <div class="wrap"><div class="brand"><span class="b" data-ball></span>TickTap</div><p>Demo build with simulated prices and bets. It is not connected to Betfair or any bookmaker. No profit is promised. The account holder is responsible for following Betfair&rsquo;s terms and local law, and for keeping their own keys and login private.</p></div>
+  <div class="wrap"><div class="brand"><span class="b" data-ball></span>TickTap</div><p>Demo build with simulated prices and bets. It is not connected to Betfair or any bookmaker. No profit is promised. The account holder is responsible for following Betfair&rsquo;s terms and local law, and for keeping their own keys and login private.</p><button class="mot" id="motion" type="button" aria-label="Switch page motion on or off"></button></div>
 </footer>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -655,7 +675,7 @@ html[lang=hi] .sec h2,html[lang=hi] .how-head h2{font-size:clamp(28px,4vw,50px)}
 (()=>{
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce=document.documentElement.classList.contains('nomotion');
 const fine=matchMedia('(pointer:fine)').matches;
 const POUND='\u00a3';
 
@@ -932,7 +952,7 @@ let plates='';
 for(let k=5;k>=0;k--){plates+=`<div class="gate-plate ${k===0?'gate-front':''}" style="transform:translateZ(${-k*9}px);background:${k===0?'':`hsl(222 30% ${95-k*5}%)`};${k===0?'':'border-color:#e5a23a'}">${k===0?'<b>BETFAIR API</b><small>placeOrders</small>':''}</div>`}
 st3.innerHTML=plates;
 const tag3=document.createElement('div');tag3.className='tag';tag3.innerHTML='3<small>PLACE</small>';tag3.style.cssText='left:115px;top:-96px';st3.appendChild(tag3);
-const stamp3=document.createElement('div');stamp3.className='placed3';stamp3.textContent='PLACED';stamp3.style.cssText+=';left:80px;top:150px;transform-origin:center';st3.appendChild(stamp3);
+const stamp3=document.createElement('div');stamp3.className='placed3';stamp3.textContent='PLACED';stamp3.style.cssText+=';left:88px;top:208px;transform-origin:center';st3.appendChild(stamp3);
 place(st3,ST[2].x-150,FLOOR-330,ST[2].z);world.appendChild(st3);
 const stations=[st1,st2,st3];
 
@@ -942,7 +962,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 function pathAt(s){const i=Math.max(0,Math.min(1,Math.floor(s))),t=Math.max(0,Math.min(1,s-i)),a=ST[i],b=ST[i+1]||ST[i];return{x:lerp(a.x,b.x,t),z:lerp(a.z,b.z,t)}}
 for(let i=0;i<=NDOT;i++){
   const s=i/NDOT*2,pt=pathAt(s>=2?1.999:s),d=document.createElement('div');d.className='dot3';
-  d.style.transform=`translate3d(${pt.x}px,${FLOOR-1}px,${pt.z+20}px) rotateX(90deg)`;world.appendChild(d);dots.push({el:d,s});
+  d.style.transform=`translate3d(${pt.x}px,${FLOOR-1}px,${pt.z+20}px) rotateX(90deg)`;world.appendChild(d);dots.push({el:d,s,z:pt.z+20});
 }
 const shadow=document.createElement('div');shadow.className='pshadow';world.appendChild(shadow);
 const ball=document.createElement('div');ball.className='packet';ball.innerHTML=BALL();world.appendChild(ball);
@@ -961,9 +981,12 @@ function sceneUpdate(p){
   const bz=bp.z+60;
   ball.style.transform=`translate3d(${bp.x}px,${FLOOR-18-mv}px,${bz}px) rotate(${g*540}deg)`;
   shadow.style.transform=`translate3d(${bp.x}px,${FLOOR-1}px,${bz}px) rotateX(90deg) scale(${1-mv/220})`;
-  dots.forEach(d=>d.el.classList.toggle('lit',d.s<=g+.02));
+  /* anything the camera has passed fades out before it can loom over the lens */
+  const fade=z=>{const d=z-c.z;return d<150?1:Math.max(0,1-(d-150)/260)};
+  dots.forEach(d=>{d.el.classList.toggle('lit',d.s<=g+.02);const o=fade(d.z);d.el.style.opacity=o;d.el.style.visibility=o>0?'visible':'hidden'});
   const act=Math.round(f);
-  stations.forEach((s,i)=>s.classList.toggle('on',i===act&&Math.abs(f-act)<.45));
+  stations.forEach((s,i)=>{s.classList.toggle('on',i===act&&Math.abs(f-act)<.45);const o=fade(ST[i].z);const lv=s.__lv||(s.__lv=[...s.querySelectorAll('.face,.gate-plate,.tag,.placed3')]);lv.forEach(l=>{l.style.opacity=o<1?o:''});s.style.visibility=o>0?'visible':'hidden'});
+  world.querySelectorAll(':scope > .fshadow[data-z]').forEach(e=>{const o=fade(+e.dataset.z);e.style.opacity=o;e.style.visibility=o>0?'visible':'hidden'});
   stamp3.classList.toggle('show',g>1.94&&f>1.7);
   $$('#steps li').forEach((li,i)=>li.classList.toggle('on',i===act));
   $('#hint').style.opacity=p<.04?1:0;
@@ -1028,7 +1051,7 @@ const flat=(el,cx,cz,w,h)=>{
 };
 [[0,250,170,50,-40],[1,320,230,60,-40],[2,420,200,70,-50]].forEach(([i,w,h,ox,oz])=>{
   const s=document.createElement('div');s.className='fshadow';
-  flat(s,ST[i].x+ox,ST[i].z+oz,w,h);world.insertBefore(s,world.firstChild.nextSibling);
+  s.dataset.z=ST[i].z;flat(s,ST[i].x+ox,ST[i].z+oz,w,h);world.insertBefore(s,world.firstChild.nextSibling);
 });
 /* boundary rope along both sides of the ground */
 const floor=world.querySelector('.floor');
@@ -1039,10 +1062,65 @@ const SZ=-2150;
 [-22,0,22].forEach(dx=>{const s=document.createElement('div');s.className='stump';s.style.height='132px';put(s,dx-4.5,FLOOR-132,SZ)});
 [-11,11].forEach(dx=>{const b=document.createElement('div');b.className='bail';b.style.width='24px';put(b,dx-12,FLOOR-137,SZ+1)});
 const ss=document.createElement('div');ss.className='fshadow';flat(ss,6,SZ-8,110,30);world.appendChild(ss);
+/* sight screen behind the stumps, and plain advertising boards along the stands */
+const sight=document.createElement('div');sight.className='sight';sight.style.width='520px';sight.style.height='190px';put(sight,-260,FLOOR-190,-2620);
+const board=document.createElement('div');board.className='board';board.style.width='5200px';board.style.height='46px';put(board,-2600,FLOOR-46,-3000);
 /* stands and floodlights at the horizon */
 const stand=document.createElement('div');stand.className='stand';stand.style.width='5200px';stand.style.height='250px';stand.style.opacity='.92';
 put(stand,-2600,FLOOR-250,-3020);
 [-1250,1250].forEach(x=>{const t=document.createElement('div');t.className='tower';t.style.height='560px';t.style.opacity='.95';put(t,x,FLOOR-560,-2990)});
+})();
+</script>
+<script>
+/*ASSETS*/window.TT_ASSETS={flow:'assets/flow.mp4',phone:'assets/phone.mp4',settings:'assets/settings.mp4',flow_poster:'assets/flow_poster.jpg',phone_poster:'assets/phone_poster.jpg',settings_poster:'assets/settings_poster.jpg',g_server:'assets/g_server.jpg',g_placed:'assets/g_placed.jpg',g_ground:'assets/g_ground.jpg',g_phone:'assets/g_phone.jpg',g_log:'assets/g_log.jpg'};/*END*/
+</script>
+<script>
+/* hero: looping background video and an auto-flowing reel of clips and stills */
+(()=>{
+'use strict';
+const A=window.TT_ASSETS||{};
+const reduce=document.documentElement.classList.contains('nomotion');
+const items=[['v','phone','Tap a preset',560/648],['i','g_server','Server check',16/9],['v','flow','Live ground',16/9],['i','g_log','Bet log',2.2],['v','settings','Settings in motion',960/584],['i','g_placed','Bet placed',16/9],['i','g_phone','Phone controller',440/830],['i','g_ground','Ground view',16/9]];
+function card(it){
+  const k=it[0],name=it[1],label=it[2],ar=it[3];
+  const f=document.createElement('figure');f.className='rcard';f.style.aspectRatio=String(ar);
+  if(k==='v'){
+    const v=document.createElement('video');v.muted=true;v.loop=true;v.playsInline=true;v.autoplay=!reduce;v.preload='auto';
+    v.setAttribute('muted','');v.setAttribute('playsinline','');v.setAttribute('aria-hidden','true');
+    if(A[name+'_poster'])v.poster=A[name+'_poster'];
+    v.src=A[name];f.appendChild(v);
+  }else{
+    const i=new Image();i.alt=label;i.src=A[name];f.appendChild(i);
+  }
+  const c=document.createElement('figcaption');c.textContent=label;f.appendChild(c);
+  return f;
+}
+const track=document.getElementById('reelTrack');
+if(track){items.concat(items).forEach(it=>track.appendChild(card(it)))}
+const bg=document.getElementById('heroBg');
+if(bg&&A.flow){bg.src=A.flow;if(A.flow_poster)bg.poster=A.flow_poster;if(reduce)bg.removeAttribute('autoplay')}
+const ctl=document.getElementById('reelCtl'),reel=document.getElementById('reel');
+let manual=false;
+const heroVideos=()=>document.querySelectorAll('.hero video');
+const playIt=v=>{const r=v.play&&v.play();if(r&&r.catch)r.catch(()=>{})};
+function setPaused(p){
+  manual=p;
+  if(reel)reel.classList.toggle('paused',p);
+  if(ctl){ctl.setAttribute('aria-pressed',String(p));ctl.textContent=p?'Play':'Pause'}
+  heroVideos().forEach(v=>{if(p)v.pause();else playIt(v)});
+}
+if(ctl)ctl.addEventListener('click',()=>setPaused(!manual));
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(e.isIntersecting){if(!manual)playIt(v)}else if(v.pause)v.pause()}),{threshold:.05});
+  heroVideos().forEach(v=>io.observe(v));
+}
+if(reduce)setPaused(true);
+/* motion switch in the footer: on by default, remembered, reloads to apply */
+const mot=document.getElementById('motion');
+if(mot){
+  mot.textContent=reduce?'Motion: Off':'Motion: On';
+  mot.addEventListener('click',()=>{try{localStorage.setItem('tt-motion',reduce?'on':'off')}catch(e){}location.reload()});
+}
 })();
 </script>
 <script>
@@ -1058,6 +1136,7 @@ const D={
  'Tap a preset on your Android phone. A small service places a back or lay a few ticks off the live price, straight through the Betfair API. Change stakes and outcomes from any desktop browser. No hotkeys, no ladder clicks.':'अपने Android फ़ोन पर प्रीसेट टैप करें। एक छोटी सर्विस लाइव भाव से कुछ टिक ऊपर या नीचे बैक या लेय दांव लगाती है, सीधे Betfair API के ज़रिये। स्टेक और आउटकम किसी भी डेस्कटॉप ब्राउज़र से बदलें। न कोई हॉटकी, न लैडर पर क्लिक।',
  'Try the phone \u2193':'फ़ोन आज़माएँ \u2193','Scope and timeline':'दायरा और समय-सीमा',
  'web panel,':'वेब पैनल,','two views':'दो रूप','7 days':'7 दिन','to stage one':'चरण एक तक','after funding':'फंडिंग के बाद','hotkeys.':'हॉटकी।','API only.':'सिर्फ़ API।',
+ 'Pause':'रोकें','Play':'चलाएँ','Tap a preset':'प्रीसेट टैप करें','Live ground':'लाइव मैदान','Settings in motion':'सेटिंग्स चलते हुए','Server check':'सर्वर जाँच','Phone controller':'फ़ोन कंट्रोलर','Ground view':'मैदान का नज़ारा',
  'Token renewed':'टोकन नवीनीकृत','Offset':'ऑफ़सेट','+2 ticks':'+2 टिक','Bet placed':'दांव लगा',
  'LIVE':'लाइव','Mode':'मोड','Manual':'मैन्युअल','Rules':'नियम',
  '01 / how it works':'01 / कैसे चलता है','Three hops. Nothing else in the way.':'तीन पड़ाव। बीच में और कुछ नहीं।','SCROLL':'स्क्रॉल करें',
@@ -1123,6 +1202,7 @@ const D={
 const NAMES=[[/\bIndia\b/g,'भारत'],[/\bAustralia\b/g,'ऑस्ट्रेलिया']];
 const nm=s=>NAMES.reduce((a,[r,h])=>a.replace(r,h),s);
 const P=[
+ [/^Motion: (On|Off)$/,(m)=>'मोशन: '+(m[1]==='On'?'चालू':'बंद')],
  [/^token (\d:\d\d)$/,(m)=>'टोकन '+m[1]],
  [/^(\d+) of (\d+) entries$/,(m)=>m[2]+' में से '+m[1]+' प्रविष्टियाँ'],
  [/^(\d+) of (\d+) ready$/,(m)=>m[1]+'/'+m[2]+' तैयार'],
